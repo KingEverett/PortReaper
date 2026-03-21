@@ -47,11 +47,11 @@ Plans:
   3. A 50-port scan completes without exhausting file descriptors — concurrent queries are bounded by a configurable semaphore
   4. CVE-2021-41773 appearing in both NVD and CVE.org results appears exactly once in output (deduplication by CVE ID)
   5. Progress output is shown during vulnerability lookups so the user can see the tool is working on large scans
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 02-01-PLAN.md — Vulnerability/Severity types, VulnSource trait update, NvdSource with CVSS extraction
-- [ ] 02-02-PLAN.md — CveOrgSource, enrichment orchestrator with concurrency, backoff, dedup
+- [x] 02-02-PLAN.md — CveOrgSource, enrichment orchestrator with concurrency, backoff, dedup
 - [ ] 02-03-PLAN.md — CLI wiring (async main, --no-enrich), tree renderer CVE display, severity colors
 
 ### Phase 3: Obsidian Vault Output
@@ -93,7 +93,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-21 |
-| 2. Enrichment Core | 1/3 | In Progress|  |
+| 2. Enrichment Core | 2/3 | In Progress|  |
 | 3. Obsidian Vault Output | 0/TBD | Not started | - |
 | 4. Additional Sources and Caching | 0/TBD | Not started | - |
 | 5. Config, Polish, and Incremental Updates | 0/TBD | Not started | - |

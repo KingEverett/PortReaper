@@ -17,11 +17,11 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Vulnerability Lookup
 
 - [x] **VULN-01**: Query NVD (NIST) for CVEs and CVSS scores
-- [ ] **VULN-02**: Query CVE.org for vulnerability data
+- [x] **VULN-02**: Query CVE.org for vulnerability data
 - [ ] **VULN-03**: Query OSV.dev for open-source vulnerability data
 - [ ] **VULN-04**: Integrate SearchSploit local exploit database
 - [x] **VULN-05**: CPE-based matching for accurate vulnerability lookups
-- [ ] **VULN-06**: Rate limiting and bounded concurrency for API queries
+- [x] **VULN-06**: Rate limiting and bounded concurrency for API queries
 - [ ] **VULN-07**: Local caching to avoid re-querying known services
 
 ### Output
@@ -80,9 +80,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ARCH-01 | Phase 1 | Complete |
 | ARCH-02 | Phase 1 | Complete |
 | VULN-01 | Phase 2 | Complete |
-| VULN-02 | Phase 2 | Pending |
+| VULN-02 | Phase 2 | Complete |
 | VULN-05 | Phase 2 | Complete |
-| VULN-06 | Phase 2 | Pending |
+| VULN-06 | Phase 2 | Complete |
 | ARCH-04 | Phase 2 | Pending |
 | OUT-01 | Phase 3 | Pending |
 | OUT-02 | Phase 3 | Pending |
