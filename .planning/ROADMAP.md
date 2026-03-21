@@ -13,7 +13,7 @@ PortReaper is a four-layer data pipeline: nmap XML enters, gets normalized into 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - CLI skeleton, nmap XML parsing, normalized data models, and sanitized filename infrastructure (completed 2026-03-21)
-- [ ] **Phase 2: Enrichment Core** - VulnSource trait, NVD + CVE.org integration, typed errors, bounded concurrency, CVSS classification
+- [x] **Phase 2: Enrichment Core** - VulnSource trait, NVD + CVE.org integration, typed errors, bounded concurrency, CVSS classification (completed 2026-03-21)
 - [ ] **Phase 3: Obsidian Vault Output** - Full vault generation: per-host/service/CVE notes, wikilinks, frontmatter, severity tags, CSS snippet
 - [ ] **Phase 4: Additional Sources and Caching** - OSV.dev, SearchSploit, response caching, concurrency controls
 - [ ] **Phase 5: Config, Polish, and Incremental Updates** - TOML config, API key management, incremental vault merging, progress indicators
@@ -47,12 +47,12 @@ Plans:
   3. A 50-port scan completes without exhausting file descriptors — concurrent queries are bounded by a configurable semaphore
   4. CVE-2021-41773 appearing in both NVD and CVE.org results appears exactly once in output (deduplication by CVE ID)
   5. Progress output is shown during vulnerability lookups so the user can see the tool is working on large scans
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 02-01-PLAN.md — Vulnerability/Severity types, VulnSource trait update, NvdSource with CVSS extraction
 - [x] 02-02-PLAN.md — CveOrgSource, enrichment orchestrator with concurrency, backoff, dedup
-- [ ] 02-03-PLAN.md — CLI wiring (async main, --no-enrich), tree renderer CVE display, severity colors
+- [x] 02-03-PLAN.md — CLI wiring (async main, --no-enrich), tree renderer CVE display, severity colors
 
 ### Phase 3: Obsidian Vault Output
 **Goal**: Users can open the generated Obsidian vault immediately after a scan and navigate a complete, severity-colored knowledge graph linking hosts, services, and shared CVE notes via wikilinks
@@ -93,7 +93,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-21 |
-| 2. Enrichment Core | 2/3 | In Progress|  |
+| 2. Enrichment Core | 3/3 | Complete   | 2026-03-21 |
 | 3. Obsidian Vault Output | 0/TBD | Not started | - |
 | 4. Additional Sources and Caching | 0/TBD | Not started | - |
 | 5. Config, Polish, and Incremental Updates | 0/TBD | Not started | - |
