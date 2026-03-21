@@ -37,8 +37,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Architecture
 
-- [ ] **ARCH-01**: Pluggable data source trait for easy swapping/adding of databases
-- [ ] **ARCH-02**: Typed error handling (distinguish rate limit vs empty result vs network error)
+- [x] **ARCH-01**: Pluggable data source trait for easy swapping/adding of databases
+- [x] **ARCH-02**: Typed error handling (distinguish rate limit vs empty result vs network error)
 - [ ] **ARCH-03**: Config file for default sources, API keys, output paths
 - [ ] **ARCH-04**: Progress indicators during vulnerability lookups
 
@@ -77,8 +77,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INPUT-02 | Phase 1 | Pending |
 | INPUT-03 | Phase 1 | Pending |
 | INPUT-04 | Phase 1 | Pending |
-| ARCH-01 | Phase 1 | Pending |
-| ARCH-02 | Phase 1 | Pending |
+| ARCH-01 | Phase 1 | Complete |
+| ARCH-02 | Phase 1 | Complete |
 | VULN-01 | Phase 2 | Pending |
 | VULN-02 | Phase 2 | Pending |
 | VULN-05 | Phase 2 | Pending |
