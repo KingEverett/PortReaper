@@ -12,7 +12,7 @@ PortReaper is a four-layer data pipeline: nmap XML enters, gets normalized into 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - CLI skeleton, nmap XML parsing, normalized data models, and sanitized filename infrastructure
+- [x] **Phase 1: Foundation** - CLI skeleton, nmap XML parsing, normalized data models, and sanitized filename infrastructure (completed 2026-03-21)
 - [ ] **Phase 2: Enrichment Core** - VulnSource trait, NVD + CVE.org integration, typed errors, bounded concurrency, CVSS classification
 - [ ] **Phase 3: Obsidian Vault Output** - Full vault generation: per-host/service/CVE notes, wikilinks, frontmatter, severity tags, CSS snippet
 - [ ] **Phase 4: Additional Sources and Caching** - OSV.dev, SearchSploit, response caching, concurrency controls
@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A scan file with multiple hosts produces correct per-host output — no hosts silently dropped
   4. The VulnSource plugin trait is defined and the typed error taxonomy (Empty vs RateLimited vs NetworkFailure) is in place, enforced at compile time
   5. Attempting to pass a non-nmap file produces a clear, actionable error message rather than a panic or silent failure
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 01-01-PLAN.md — Project init, data models, VulnSource trait, error taxonomy, test fixtures
 - [x] 01-02-PLAN.md — XML, text, and greppable parsers with format auto-detection and host merging
-- [ ] 01-03-PLAN.md — CLI (clap), Unicode tree renderer, main wiring, exit codes, integration tests
+- [x] 01-03-PLAN.md — CLI (clap), Unicode tree renderer, main wiring, exit codes, integration tests
 
 ### Phase 2: Enrichment Core
 **Goal**: Users can run PortReaper against a real scan and get NVD + CVE.org vulnerability data for each service, classified by CVSS severity, with correct rate limiting and no silent data loss from API failures
@@ -87,7 +87,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In Progress|  |
+| 1. Foundation | 3/3 | Complete   | 2026-03-21 |
 | 2. Enrichment Core | 0/TBD | Not started | - |
 | 3. Obsidian Vault Output | 0/TBD | Not started | - |
 | 4. Additional Sources and Caching | 0/TBD | Not started | - |
