@@ -132,6 +132,7 @@ fn extract_ports(line: &str) -> Vec<models::Port> {
                 protocol,
                 state,
                 service,
+                vulnerabilities: vec![],
             }
         })
         .collect()

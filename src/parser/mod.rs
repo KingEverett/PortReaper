@@ -211,6 +211,7 @@ mod tests {
                     protocol: "tcp".to_string(),
                     state: "open".to_string(),
                     service: None,
+                    vulnerabilities: vec![],
                 })
                 .collect(),
             os_matches: vec![],
