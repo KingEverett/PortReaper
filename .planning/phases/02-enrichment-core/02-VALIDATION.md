@@ -38,15 +38,14 @@ created: 2026-03-21
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 2-01-01 | 01 | 1 | VULN-05 | unit | `cargo test cpe` | ❌ W0 | ⬜ pending |
-| 2-01-02 | 01 | 1 | VULN-01 | unit | `cargo test nvd` | ❌ W0 | ⬜ pending |
-| 2-01-03 | 01 | 1 | VULN-02 | unit | `cargo test cveorg` | ❌ W0 | ⬜ pending |
-| 2-02-01 | 02 | 1 | VULN-06 | unit | `cargo test enrichment` | ❌ W0 | ⬜ pending |
-| 2-02-02 | 02 | 1 | VULN-06 | unit | `cargo test retry` | ❌ W0 | ⬜ pending |
-| 2-03-01 | 03 | 2 | ARCH-04 | integration | `cargo test progress` | ❌ W0 | ⬜ pending |
-| 2-03-02 | 03 | 2 | VULN-01 | integration | `cargo test tree` | ❌ W0 | ⬜ pending |
+| 2-01-01 | 01 | 1 | VULN-01, VULN-05 | unit | `cargo test --lib models::tests && cargo test --lib sources::tests` | W0 | pending |
+| 2-01-02 | 01 | 1 | VULN-01 | unit | `cargo test --lib sources::nvd && cargo test --lib sources::tests` | W0 | pending |
+| 2-02-01 | 02 | 2 | VULN-02 | unit | `cargo test --lib sources::cve_org && cargo test --lib sources` | W0 | pending |
+| 2-02-02 | 02 | 2 | VULN-06 | unit | `cargo test --lib enrichment && cargo test` | W0 | pending |
+| 2-03-01 | 03 | 3 | ARCH-04 | integration | `cargo build && cargo test --test cli test_no_input_shows_error` | W0 | pending |
+| 2-03-02 | 03 | 3 | VULN-06 | integration | `cargo test --test cli && cargo test --lib render::tree && cargo test` | W0 | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
@@ -54,7 +53,7 @@ created: 2026-03-21
 
 - [ ] `tests/nvd_tests.rs` — stubs for NVD API response parsing (VULN-01)
 - [ ] `tests/cveorg_tests.rs` — stubs for CVE.org response parsing (VULN-02)
-- [ ] `tests/cpe_tests.rs` — CPE 2.2→2.3 conversion tests (VULN-05)
+- [ ] `tests/cpe_tests.rs` — CPE 2.2->2.3 conversion tests (VULN-05)
 - [ ] `tests/enrichment_tests.rs` — deduplication, concurrency, retry logic (VULN-06)
 
 *Existing cargo test infrastructure covers framework needs.*
