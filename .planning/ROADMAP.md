@@ -30,11 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A scan file with multiple hosts produces correct per-host output — no hosts silently dropped
   4. The VulnSource plugin trait is defined and the typed error taxonomy (Empty vs RateLimited vs NetworkFailure) is in place, enforced at compile time
   5. Attempting to pass a non-nmap file produces a clear, actionable error message rather than a panic or silent failure
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 01-01-PLAN.md — Project init, data models, VulnSource trait, error taxonomy, test fixtures
-- [ ] 01-02-PLAN.md — XML, text, and greppable parsers with format auto-detection and host merging
+- [x] 01-02-PLAN.md — XML, text, and greppable parsers with format auto-detection and host merging
 - [ ] 01-03-PLAN.md — CLI (clap), Unicode tree renderer, main wiring, exit codes, integration tests
 
 ### Phase 2: Enrichment Core
@@ -87,7 +87,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Planning complete | - |
+| 1. Foundation | 2/3 | In Progress|  |
 | 2. Enrichment Core | 0/TBD | Not started | - |
 | 3. Obsidian Vault Output | 0/TBD | Not started | - |
 | 4. Additional Sources and Caching | 0/TBD | Not started | - |

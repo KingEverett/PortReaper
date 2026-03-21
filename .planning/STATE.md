@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-foundation-01-01-PLAN.md
-last_updated: "2026-03-21T19:54:57.606Z"
+stopped_at: Completed 01-foundation-01-02-PLAN.md
+last_updated: "2026-03-21T20:00:52.581Z"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Plan: 2 of 3
 
 *Updated after each plan completion*
 | Phase 01-foundation P01 | 3 | 3 tasks | 15 files |
+| Phase 01 P02 | 4 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: VulnSource trait bounded with Send + Sync for concurrent source querying via tokio::sync::Semaphore
 - [Phase 01-foundation]: sanitize_filename() wrapper established as single choke point before any file-write code
 - [Phase 01-foundation]: serde-saphyr deferred to Phase 3 -- no YAML output needed in Phase 1
+- [Phase 01]: src/lib.rs added to expose parser modules for integration tests -- binary crates require lib target for pub module access in tests/
+- [Phase 01]: Text and greppable parsers store version info in product field -- these formats combine product/version as single string
+- [Phase 01]: parse() returns Ok with empty hosts for non-nmap text input -- text format is fallback, indistinguishable without host markers; warns to stderr
 
 ### Pending Todos
 
@@ -78,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T19:54:57.604Z
-Stopped at: Completed 01-foundation-01-01-PLAN.md
+Last session: 2026-03-21T20:00:52.580Z
+Stopped at: Completed 01-foundation-01-02-PLAN.md
 Resume file: None
