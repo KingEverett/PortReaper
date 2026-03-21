@@ -1,6 +1,7 @@
 use thiserror::Error;
 
 pub mod nvd;
+pub mod cve_org;
 
 #[derive(Debug, Error)]
 pub enum VulnLookupError {
