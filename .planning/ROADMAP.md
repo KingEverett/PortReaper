@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project init, data models, VulnSource trait, error taxonomy, test fixtures
+- [x] 01-01-PLAN.md — Project init, data models, VulnSource trait, error taxonomy, test fixtures
 - [ ] 01-02-PLAN.md — XML, text, and greppable parsers with format auto-detection and host merging
 - [ ] 01-03-PLAN.md — CLI (clap), Unicode tree renderer, main wiring, exit codes, integration tests
 
