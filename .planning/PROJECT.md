@@ -12,16 +12,14 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Parse nmap XML output files (`-oX` format) — Validated in Phase 01: Foundation
+- [x] Accept piped nmap text output from stdin — Validated in Phase 01: Foundation
+- [x] Support pluggable data source architecture for easy swapping/adding of databases — Validated in Phase 01: Foundation (VulnSource trait)
 
 ### Active
-
-- [ ] Parse nmap XML output files (`-oX` format)
-- [ ] Accept piped nmap text output from stdin
 - [ ] Generate Obsidian vault with `[[wikilinks]]` for native graph view
 - [ ] Produce hierarchical node structure: Project → IP Addresses → Ports/Services
 - [ ] Auto-research each discovered service/version against vulnerability databases
-- [ ] Support pluggable data source architecture for easy swapping/adding of databases
 - [ ] Query CVE.org for vulnerability data
 - [ ] Query NVD (NIST) for vulnerability data and CVSS scores
 - [ ] Query OSV.dev for vulnerability data
@@ -59,11 +57,11 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Rust for implementation | Single binary, fast concurrent HTTP requests, strong CLI ecosystem | — Pending |
+| Rust for implementation | Single binary, fast concurrent HTTP requests, strong CLI ecosystem | ✓ Validated |
 | Obsidian vault as output | User's existing workflow tool, graph view maps naturally to enumeration hierarchy | — Pending |
 | Tags + frontmatter for severity | Enables Obsidian graph filtering and CSS snippet color-coding without folder-based organization | — Pending |
-| Pluggable data source architecture | User wants to easily swap/add vulnerability databases as the tool evolves | — Pending |
-| Support both pipe and XML input | Pipe for quick use, XML for richer data — covers both workflow patterns | — Pending |
+| Pluggable data source architecture | User wants to easily swap/add vulnerability databases as the tool evolves | ✓ Validated |
+| Support both pipe and XML input | Pipe for quick use, XML for richer data — covers both workflow patterns | ✓ Validated |
 
 ---
-*Last updated: 2026-03-20 after initialization*
+*Last updated: 2026-03-21 after Phase 01 (Foundation) completion*
