@@ -73,35 +73,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INPUT-01 | — | Pending |
-| INPUT-02 | — | Pending |
-| INPUT-03 | — | Pending |
-| INPUT-04 | — | Pending |
-| VULN-01 | — | Pending |
-| VULN-02 | — | Pending |
-| VULN-03 | — | Pending |
-| VULN-04 | — | Pending |
-| VULN-05 | — | Pending |
-| VULN-06 | — | Pending |
-| VULN-07 | — | Pending |
-| OUT-01 | — | Pending |
-| OUT-02 | — | Pending |
-| OUT-03 | — | Pending |
-| OUT-04 | — | Pending |
-| OUT-05 | — | Pending |
-| OUT-06 | — | Pending |
-| OUT-07 | — | Pending |
-| OUT-08 | — | Pending |
-| ARCH-01 | — | Pending |
-| ARCH-02 | — | Pending |
-| ARCH-03 | — | Pending |
-| ARCH-04 | — | Pending |
+| INPUT-01 | Phase 1 | Pending |
+| INPUT-02 | Phase 1 | Pending |
+| INPUT-03 | Phase 1 | Pending |
+| INPUT-04 | Phase 1 | Pending |
+| ARCH-01 | Phase 1 | Pending |
+| ARCH-02 | Phase 1 | Pending |
+| VULN-01 | Phase 2 | Pending |
+| VULN-02 | Phase 2 | Pending |
+| VULN-05 | Phase 2 | Pending |
+| VULN-06 | Phase 2 | Pending |
+| ARCH-04 | Phase 2 | Pending |
+| OUT-01 | Phase 3 | Pending |
+| OUT-02 | Phase 3 | Pending |
+| OUT-03 | Phase 3 | Pending |
+| OUT-04 | Phase 3 | Pending |
+| OUT-05 | Phase 3 | Pending |
+| OUT-06 | Phase 3 | Pending |
+| OUT-07 | Phase 3 | Pending |
+| VULN-03 | Phase 4 | Pending |
+| VULN-04 | Phase 4 | Pending |
+| VULN-07 | Phase 4 | Pending |
+| OUT-08 | Phase 5 | Pending |
+| ARCH-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-20*
-*Last updated: 2026-03-20 after initial definition*
+*Last updated: 2026-03-20 after roadmap creation — full traceability established*
