@@ -4,13 +4,15 @@ mod render;
 use portreaper::parser;
 use std::io::Read;
 use std::process::ExitCode;
+use std::sync::Arc;
 use clap::Parser;
 use is_terminal::IsTerminal;
 
-fn main() -> ExitCode {
+#[tokio::main]
+async fn main() -> ExitCode {
     let cli = cli::Cli::parse();
 
-    match run(&cli) {
+    match run(&cli).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
             let code = if is_no_input_error(&e) { 2 } else { 1 };
@@ -31,9 +33,30 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(cli: &cli::Cli) -> anyhow::Result<()> {
+async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
     let inputs = get_inputs(cli)?;
-    let result = parser::parse_and_merge(inputs)?;
+    let mut result = parser::parse_and_merge(inputs)?;
+
+    if !cli.no_enrich {
+        // Read NVD API key from PORTREAPER_NVD_KEY env var per D-07
+        let api_key = std::env::var("PORTREAPER_NVD_KEY").ok();
+        let nvd = Arc::new(portreaper::sources::nvd::NvdSource::new(api_key));
+        let cve_org = Arc::new(portreaper::sources::cve_org::CveOrgSource::new());
+
+        let enrich_opts = portreaper::enrichment::EnrichmentOptions {
+            concurrency: 5, // D-15: default cap
+            quiet: cli.quiet, // D-13: -q suppresses progress
+        };
+
+        let stats = portreaper::enrichment::enrich_scan(
+            &mut result, nvd, cve_org, &enrich_opts
+        ).await;
+
+        // Print source failure warnings to stderr per D-05
+        for failure in &stats.source_failures {
+            eprintln!("Warning: {}", failure);
+        }
+    }
 
     let use_color = std::io::stdout().is_terminal();
     let opts = render::tree::RenderOptions {

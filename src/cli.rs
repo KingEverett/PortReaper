@@ -18,9 +18,9 @@ pub struct Cli {
     #[arg(short = 'q', long)]
     pub quiet: bool,
 
-    /// Enrich results with vulnerability lookups (Phase 2)
-    #[arg(long, hide = true)]
-    pub enrich: bool,
+    /// Skip vulnerability lookups (parse and display only)
+    #[arg(long)]
+    pub no_enrich: bool,
 
     /// Output Obsidian vault to directory (Phase 3)
     #[arg(long, hide = true)]
