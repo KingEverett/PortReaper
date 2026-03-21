@@ -1,0 +1,10 @@
+Starting Nmap 7.94 ( https://nmap.org ) at 2024-03-10 10:00 UTC
+Nmap scan report for 192.168.1.1
+Host is up (0.0010s latency).
+
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 8.9p1 Ubuntu 3ubuntu0.6
+80/tcp   open  http     Apache httpd 2.4.52
+443/tcp  open  ssl/http
+
+Nmap done: 1 IP address (1 host up) scanned in 5.32 seconds

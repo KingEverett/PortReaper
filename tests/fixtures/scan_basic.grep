@@ -1,0 +1,4 @@
+# Nmap 7.94 scan initiated Sun Mar 10 10:00:00 2024 as: nmap -sV -oG scan.grep 192.168.1.1
+Host: 192.168.1.1 ()	Status: Up
+Host: 192.168.1.1 ()	Ports: 22/open/tcp//ssh//OpenSSH 8.9p1/, 80/open/tcp//http//Apache httpd 2.4.52/, 443/open/tcp//ssl|http///	Ignored State: filtered (997)
+# Nmap done at Sun Mar 10 10:05:32 2024 -- 1 IP address (1 host up) scanned in 332.00 seconds

@@ -1,0 +1,3 @@
+This is just a random text file.
+It has nothing to do with nmap output.
+No ports, no hosts, no services here.
