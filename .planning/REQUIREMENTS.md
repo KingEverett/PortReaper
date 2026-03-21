@@ -9,18 +9,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Input
 
-- [ ] **INPUT-01**: Parse nmap XML output files (`-oX` format) with full field extraction (ports, services, versions, OS, scripts)
-- [ ] **INPUT-02**: Accept piped nmap text output from stdin
-- [ ] **INPUT-03**: Handle multiple hosts in a single scan file
-- [ ] **INPUT-04**: Auto-detect input format (XML vs text)
+- [x] **INPUT-01**: Parse nmap XML output files (`-oX` format) with full field extraction (ports, services, versions, OS, scripts)
+- [x] **INPUT-02**: Accept piped nmap text output from stdin
+- [x] **INPUT-03**: Handle multiple hosts in a single scan file
+- [x] **INPUT-04**: Auto-detect input format (XML vs text)
 
 ### Vulnerability Lookup
 
-- [ ] **VULN-01**: Query NVD (NIST) for CVEs and CVSS scores
+- [x] **VULN-01**: Query NVD (NIST) for CVEs and CVSS scores
 - [ ] **VULN-02**: Query CVE.org for vulnerability data
 - [ ] **VULN-03**: Query OSV.dev for open-source vulnerability data
 - [ ] **VULN-04**: Integrate SearchSploit local exploit database
-- [ ] **VULN-05**: CPE-based matching for accurate vulnerability lookups
+- [x] **VULN-05**: CPE-based matching for accurate vulnerability lookups
 - [ ] **VULN-06**: Rate limiting and bounded concurrency for API queries
 - [ ] **VULN-07**: Local caching to avoid re-querying known services
 
@@ -73,15 +73,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INPUT-01 | Phase 1 | Pending |
-| INPUT-02 | Phase 1 | Pending |
-| INPUT-03 | Phase 1 | Pending |
-| INPUT-04 | Phase 1 | Pending |
+| INPUT-01 | Phase 1 | Complete |
+| INPUT-02 | Phase 1 | Complete |
+| INPUT-03 | Phase 1 | Complete |
+| INPUT-04 | Phase 1 | Complete |
 | ARCH-01 | Phase 1 | Complete |
 | ARCH-02 | Phase 1 | Complete |
-| VULN-01 | Phase 2 | Pending |
+| VULN-01 | Phase 2 | Complete |
 | VULN-02 | Phase 2 | Pending |
-| VULN-05 | Phase 2 | Pending |
+| VULN-05 | Phase 2 | Complete |
 | VULN-06 | Phase 2 | Pending |
 | ARCH-04 | Phase 2 | Pending |
 | OUT-01 | Phase 3 | Pending |

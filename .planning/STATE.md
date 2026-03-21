@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-21T20:39:59.650Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-21T21:19:32.377Z"
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 6
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Eliminate manual vulnerability research during pentest enumeration by automating nmap-to-Obsidian knowledge graph generation with severity-highlighted nodes
-**Current focus:** Phase 01 — foundation
+**Current focus:** Phase 02 — enrichment-core
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (enrichment-core) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: Not started
 | Phase 01-foundation P01 | 3 | 3 tasks | 15 files |
 | Phase 01 P02 | 4 | 3 tasks | 9 files |
 | Phase 01-foundation P03 | 4 | 3 tasks | 6 files |
+| Phase 02-enrichment-core P01 | 5min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: owo-colors supports-colors feature required for if_supports_color/Stream API -- not enabled by default in base crate
 - [Phase 01-foundation]: Binary crate modules use portreaper:: prefix for lib types -- crate:: in binary refers to binary crate, not lib
 - [Phase 01-foundation]: ExitCode returned from main() -- never process::exit(); is_no_input_error() classifies errors for exit code 2 vs 1
+- [Phase 02-enrichment-core]: RPITIT used for async lookup_cpe in VulnSource trait - edition 2024 native, no async_trait crate needed
+- [Phase 02-enrichment-core]: Separate CvssV2Entry/CvssV2Data serde structs enforce V2 baseSeverity-at-entry-level at type level
+- [Phase 02-enrichment-core]: reqwest 0.13 uses 'rustls' feature (not 'rustls-tls') and requires explicit 'query' feature for .query() method
 
 ### Pending Todos
 
@@ -86,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T20:39:59.647Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-enrichment-core/02-CONTEXT.md
+Last session: 2026-03-21T21:19:32.375Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None
