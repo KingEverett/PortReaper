@@ -143,7 +143,7 @@ fn test_empty_stdin_nonzero() {
 #[test]
 fn test_summary_counts() {
     // scan_basic.xml has 1 host, 3 open ports, 3 unique services
-    let (stdout, _stderr, code) = run(&["tests/fixtures/scan_basic.xml"]);
+    let (stdout, _stderr, code) = run(&["tests/fixtures/scan_basic.xml", "--no-enrich"]);
     assert_eq!(code, 0);
     assert!(
         stdout.contains("1 hosts") || stdout.contains("1 host"),
@@ -153,4 +153,35 @@ fn test_summary_counts() {
         stdout.contains("3 open ports"),
         "Summary missing port count:\n{}", stdout
     );
+}
+
+#[test]
+fn test_no_enrich_flag() {
+    let output = Command::new(env!("CARGO_BIN_EXE_portreaper"))
+        .arg("--no-enrich")
+        .arg("tests/fixtures/scan_basic.xml")
+        .output()
+        .expect("failed to run");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Should show tree without CVEs (same as Phase 1 behavior)
+    assert!(stdout.contains("Summary:"), "stdout missing Summary:\n{}", stdout);
+    assert!(stdout.contains("hosts"), "stdout missing hosts:\n{}", stdout);
+    // Should NOT contain CVE lines
+    assert!(!stdout.contains("CVE-"), "stdout should not contain CVE- with --no-enrich:\n{}", stdout);
+}
+
+#[test]
+fn test_quiet_with_no_enrich() {
+    let output = Command::new(env!("CARGO_BIN_EXE_portreaper"))
+        .arg("-q")
+        .arg("--no-enrich")
+        .arg("tests/fixtures/scan_basic.xml")
+        .output()
+        .expect("failed to run");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Summary:"), "stdout missing Summary:\n{}", stdout);
+    // Quiet mode: only summary line, no tree
+    assert!(!stdout.contains("Scan:"), "stdout has 'Scan:' header in quiet mode:\n{}", stdout);
 }
