@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-24T21:09:22.825Z"
+status: Milestone complete
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-24T21:52:02.087Z"
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Eliminate manual vulnerability research during pentest enumeration by automating nmap-to-Obsidian knowledge graph generation with severity-highlighted nodes
-**Current focus:** Phase 04 — additional-sources-and-caching
+**Current focus:** Phase 05 — config-polish-and-incremental-updates
 
 ## Current Position
 
-Phase: 5
+Phase: 05
 Plan: Not started
 
 ## Performance Metrics
@@ -58,6 +58,8 @@ Plan: Not started
 | Phase 04-additional-sources-and-caching P01 | 9 | 2 tasks | 16 files |
 | Phase 04 P02 | 1 | 1 tasks | 3 files |
 | Phase 04 P03 | 4 | 2 tasks | 5 files |
+| Phase 05 P02 | 4 | 2 tasks | 2 files |
+| Phase 05-config-polish-and-incremental-updates P01 | 4 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -102,6 +104,12 @@ Recent decisions affecting current work:
 - [Phase 04]: enrich_scan takes Option<Arc<T>> for all four sources — None means disabled or unavailable, no separate config struct needed
 - [Phase 04]: Cache wraps NVD and OSV only; CVE.org is a per-CVE enrichment source not a lookup source so caching gives no benefit
 - [Phase 04]: render_service_body gains exploits: &[Exploit] parameter — &[] passed where no exploits exist (backward compatible)
+- [Phase 05]: serde_yml used for apply_stale_tags to avoid regex-based YAML mutation — required by RESEARCH.md
+- [Phase 05]: build_score_history_section checks last row score before appending to prevent duplicate entries on re-run
+- [Phase 05]: writer::write_note retained for non-note files (graph.json, CSS, _index.md) that have no Notes section to preserve
+- [Phase 05-config-polish-and-incremental-updates]: load_config() never fails startup — warns to stderr and returns defaults on malformed TOML (D-07)
+- [Phase 05-config-polish-and-incremental-updates]: env var PORTREAPER_NVD_KEY > config nvd_key > None priority chain (D-05)
+- [Phase 05-config-polish-and-incremental-updates]: find_merge_target called before derive_scan_label — scan label resolution is overlap-aware (D-03)
 
 ### Pending Todos
 
@@ -116,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T21:09:22.824Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-config-polish-and-incremental-updates/05-CONTEXT.md
+Last session: 2026-03-24T21:47:27.714Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None

@@ -93,11 +93,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. A TOML config file at the OS-appropriate path (e.g., `~/.config/portreaper/config.toml`) controls which sources are enabled, API keys (NVD key), concurrency cap, and output path — and the tool reads it automatically on startup
   2. Running PortReaper against a second scan of the same target merges new ports and CVEs into existing notes without deleting manually added content or duplicating existing entries
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 05-01-PLAN.md — TOML config module, main.rs wiring (priority merge, elapsed time, cache TTL)
-- [ ] 05-02-PLAN.md — Vault merge module (Notes preservation, stale tags, Score History, scan overlap)
+- [x] 05-02-PLAN.md — Vault merge module (Notes preservation, stale tags, Score History, scan overlap)
 
 ## Progress
 
@@ -110,4 +110,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Enrichment Core | 3/3 | Complete   | 2026-03-21 |
 | 3. Obsidian Vault Output | 2/3 | In Progress|  |
 | 4. Additional Sources and Caching | 2/3 | In Progress|  |
-| 5. Config, Polish, and Incremental Updates | 0/2 | Not started | - |
+| 5. Config, Polish, and Incremental Updates | 1/2 | In Progress|  |
