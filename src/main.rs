@@ -34,20 +34,41 @@ async fn main() -> ExitCode {
 }
 
 async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
+    let start = std::time::Instant::now(); // D-12: elapsed time
+
+    let cfg = portreaper::config::load_config();
+
+    // D-06: one-time hint if config has API key
+    if cfg.api_keys.nvd_key.is_some() {
+        eprintln!("Tip: API keys can also be set via env vars (PORTREAPER_NVD_KEY) to avoid storing in plaintext.");
+    }
+
     let inputs = get_inputs(cli)?;
     let mut result = parser::parse_and_merge(inputs)?;
 
     if !cli.no_enrich {
         let opts = portreaper::enrichment::EnrichmentOptions {
-            concurrency: 5, // D-15: default cap
-            quiet: cli.quiet, // D-13: -q suppresses progress
+            concurrency: cfg.enrichment.concurrency, // was hardcoded 5
+            quiet: cli.quiet,
             fresh: cli.fresh,
-            disabled_sources: cli.disable_sources.iter().map(|s| s.to_lowercase()).collect(),
+            disabled_sources: {
+                // D-09: merge config-disabled and CLI-disabled sources
+                let mut disabled: Vec<String> = cli.disable_sources.iter().map(|s| s.to_lowercase()).collect();
+                if !cfg.sources.nvd { disabled.push("nvd".to_string()); }
+                if !cfg.sources.cveorg { disabled.push("cveorg".to_string()); }
+                if !cfg.sources.osv { disabled.push("osv".to_string()); }
+                if !cfg.sources.searchsploit { disabled.push("searchsploit".to_string()); }
+                disabled
+            },
+            cache_ttl_secs: (cfg.enrichment.cache_ttl_days as i64) * 86400, // days -> seconds
         };
 
+        // D-05 priority: env var > config > none
+        let nvd_key = std::env::var("PORTREAPER_NVD_KEY").ok()
+            .or_else(|| cfg.api_keys.nvd_key.clone());
+
         let nvd = if opts.source_enabled("nvd") {
-            let api_key = std::env::var("PORTREAPER_NVD_KEY").ok();
-            Some(Arc::new(portreaper::sources::nvd::NvdSource::new(api_key)))
+            Some(Arc::new(portreaper::sources::nvd::NvdSource::new(nvd_key)))
         } else {
             None
         };
@@ -96,8 +117,12 @@ async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
         }
     }
 
-    if let Some(vault_path) = &cli.vault {
-        let scan_label = portreaper::vault::derive_scan_label(&result.source);
+    // D-09: CLI vault path overrides config vault path
+    let vault_path = cli.vault.as_ref().or(cfg.output.vault.as_ref());
+    if let Some(vault_path) = vault_path {
+        // D-03: detect existing scan subfolder by IP overlap before falling back to derive_scan_label
+        let scan_label = portreaper::vault::find_merge_target(vault_path, &result)
+            .unwrap_or_else(|| portreaper::vault::derive_scan_label(&result.source));
         let stats = portreaper::vault::generate_vault(&result, vault_path, &scan_label)
             .map_err(|e| anyhow::anyhow!("{}", e))?;
         eprintln!(
@@ -105,6 +130,7 @@ async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
             stats.hosts, stats.services, stats.cves, stats.technologies
         );
         eprintln!("Output: {}", vault_path.display());
+        eprintln!("Completed in {:.1}s", start.elapsed().as_secs_f64()); // D-12
         return Ok(());
     }
 
@@ -116,6 +142,7 @@ async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
     };
 
     render::tree::render_tree(&result, &opts);
+    eprintln!("Completed in {:.1}s", start.elapsed().as_secs_f64()); // D-12
     Ok(())
 }
 

@@ -40,6 +40,8 @@ pub struct EnrichmentOptions {
     pub fresh: bool,
     /// Lowercase source names that are disabled per D-14.
     pub disabled_sources: Vec<String>,
+    /// Cache TTL in seconds (default: 604800 = 7 days). Configurable via config file.
+    pub cache_ttl_secs: i64,
 }
 
 impl Default for EnrichmentOptions {
@@ -49,6 +51,7 @@ impl Default for EnrichmentOptions {
             quiet: false,
             fresh: false,
             disabled_sources: vec![],
+            cache_ttl_secs: 604800, // 7 days, matches cache::DEFAULT_TTL_SECS
         }
     }
 }
@@ -139,6 +142,7 @@ pub async fn enrich_scan(
 
     let semaphore = Arc::new(Semaphore::new(opts.concurrency));
     let fresh = opts.fresh;
+    let cache_ttl_secs = opts.cache_ttl_secs;
 
     // Track per-source success/failure across all tasks
     let nvd_failures = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -161,6 +165,7 @@ pub async fn enrich_scan(
         let osv_arc = osv.clone();
         let ss_arc = searchsploit.clone();
         let quiet = opts.quiet;
+        let ttl_secs = cache_ttl_secs;
 
         let nvd_fail_cnt = nvd_failures.clone();
         let nvd_ok_cnt = nvd_successes.clone();
@@ -182,7 +187,7 @@ pub async fn enrich_scan(
             if let Some(ref nvd_ref) = nvd_arc {
                 for cpe in &cpe_list {
                     // Check cache first
-                    if let Some(cached) = cache::read_cache("nvd", cpe, cache::DEFAULT_TTL_SECS, fresh).await {
+                    if let Some(cached) = cache::read_cache("nvd", cpe, ttl_secs, fresh).await {
                         if !quiet {
                             eprintln!(
                                 "[{}/{}] NVD (cached): {}... {} CVEs",
@@ -224,7 +229,7 @@ pub async fn enrich_scan(
             // ── OSV lookup with cache ──────────────────────────────────────────
             if let Some(ref osv_ref) = osv_arc {
                 for cpe in &cpe_list {
-                    if let Some(cached) = cache::read_cache("osv", cpe, cache::DEFAULT_TTL_SECS, fresh).await {
+                    if let Some(cached) = cache::read_cache("osv", cpe, ttl_secs, fresh).await {
                         if !quiet {
                             eprintln!(
                                 "[{}/{}] OSV (cached): {}... {} CVEs",
