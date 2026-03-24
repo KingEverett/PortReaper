@@ -79,11 +79,11 @@ Plans:
   1. Service notes for vulnerable services include a SearchSploit cross-reference section when the local `searchsploit` binary is present; when absent, the tool continues without error and skips the section silently
   2. OSV.dev data appears for open-source services (e.g., nginx, OpenSSL) that NVD may index slowly — adding CVEs not found via NVD/CVE.org alone
   3. Re-running PortReaper against an already-processed scan completes significantly faster because cached API responses are served locally without hitting rate limits
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
-- [ ] 04-01-PLAN.md — Exploit model, ExploitSource trait, cache module, OsvSource implementation
-- [ ] 04-02-PLAN.md — SearchSploitSource with async binary invocation and JSON parsing
+- [x] 04-01-PLAN.md — Exploit model, ExploitSource trait, cache module, OsvSource implementation
+- [x] 04-02-PLAN.md — SearchSploitSource with async binary invocation and JSON parsing
 - [ ] 04-03-PLAN.md — Enrichment wiring, CLI flags (--fresh, --disable-source), vault Exploits section
 
 ### Phase 5: Config, Polish, and Incremental Updates
@@ -105,5 +105,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Foundation | 3/3 | Complete   | 2026-03-21 |
 | 2. Enrichment Core | 3/3 | Complete   | 2026-03-21 |
 | 3. Obsidian Vault Output | 2/3 | In Progress|  |
-| 4. Additional Sources and Caching | 0/3 | Planned | - |
+| 4. Additional Sources and Caching | 2/3 | In Progress|  |
 | 5. Config, Polish, and Incremental Updates | 0/TBD | Not started | - |

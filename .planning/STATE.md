@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to plan
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-24T19:31:41.115Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-03-24T20:51:01.811Z"
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  completed_phases: 4
+  total_plans: 12
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Eliminate manual vulnerability research during pentest enumeration by automating nmap-to-Obsidian knowledge graph generation with severity-highlighted nodes
-**Current focus:** Phase 03 — obsidian-vault-output
+**Current focus:** Phase 04 — additional-sources-and-caching
 
 ## Current Position
 
-Phase: 4
+Phase: 5
 Plan: Not started
 
 ## Performance Metrics
@@ -55,6 +55,9 @@ Plan: Not started
 | Phase 03 P01 | 4 | 2 tasks | 7 files |
 | Phase 03-obsidian-vault-output P02 | 4 | 2 tasks | 2 files |
 | Phase 03-obsidian-vault-output P03 | 4min | 2 tasks | 6 files |
+| Phase 04-additional-sources-and-caching P01 | 9 | 2 tasks | 16 files |
+| Phase 04 P02 | 1 | 1 tasks | 3 files |
+| Phase 04 P03 | 4 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -91,6 +94,14 @@ Recent decisions affecting current work:
 - [Phase 03-obsidian-vault-output]: Service wikilinks pre-built as strings during pass 1 accumulation for CVE affected_services lists
 - [Phase 03-obsidian-vault-output]: severity_breakdown computed from CVE map (not per-host); counts distinct CVE notes per severity level
 - [Phase 03-obsidian-vault-output]: Integration test uses hand-crafted ScanResult to avoid real API calls
+- [Phase 04-additional-sources-and-caching]: OSV severity uses label only from database_specific.severity — no cvss crate; NVD/CVE.org numeric scores win deduplication
+- [Phase 04-additional-sources-and-caching]: ExploitSource.search_product(product, version) method vs lookup_cpe — exploits searched by name, not CPE strings
+- [Phase 04-additional-sources-and-caching]: Cache key uses DefaultHasher for filename — non-cryptographic but sufficient for cache keying
+- [Phase 04]: SearchSploitSource::try_new() uses Command::new('searchsploit').arg('--help') for binary detection — no 'which' crate needed, handles PATH resolution
+- [Phase 04]: Empty SearchSploit results return ExploitLookupError::Empty (not Ok(vec![])) — consistent no-data signaling with other sources
+- [Phase 04]: enrich_scan takes Option<Arc<T>> for all four sources — None means disabled or unavailable, no separate config struct needed
+- [Phase 04]: Cache wraps NVD and OSV only; CVE.org is a per-CVE enrichment source not a lookup source so caching gives no benefit
+- [Phase 04]: render_service_body gains exploits: &[Exploit] parameter — &[] passed where no exploits exist (backward compatible)
 
 ### Pending Todos
 
@@ -105,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T19:31:41.113Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-additional-sources-and-caching/04-CONTEXT.md
+Last session: 2026-03-24T20:48:09.267Z
+Stopped at: Completed 04-03-PLAN.md
+Resume file: None
