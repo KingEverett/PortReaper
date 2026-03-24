@@ -22,7 +22,7 @@ pub struct Cli {
     #[arg(long)]
     pub no_enrich: bool,
 
-    /// Output Obsidian vault to directory (Phase 3)
-    #[arg(long, hide = true)]
+    /// Generate Obsidian vault at specified directory
+    #[arg(long)]
     pub vault: Option<PathBuf>,
 }

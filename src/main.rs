@@ -58,6 +58,18 @@ async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
         }
     }
 
+    if let Some(vault_path) = &cli.vault {
+        let scan_label = portreaper::vault::derive_scan_label(&result.source);
+        let stats = portreaper::vault::generate_vault(&result, vault_path, &scan_label)
+            .map_err(|e| anyhow::anyhow!("{}", e))?;
+        eprintln!(
+            "Vault generated: {} hosts, {} services, {} CVEs, {} technologies",
+            stats.hosts, stats.services, stats.cves, stats.technologies
+        );
+        eprintln!("Output: {}", vault_path.display());
+        return Ok(());
+    }
+
     let use_color = std::io::stdout().is_terminal();
     let opts = render::tree::RenderOptions {
         verbose: cli.verbose,
