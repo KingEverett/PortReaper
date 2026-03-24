@@ -27,6 +27,8 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 - [x] Query SearchSploit for local exploit references — Validated in Phase 04: Additional Sources & Caching
 - [x] Query ExploitDB for available exploits — Validated in Phase 04: Additional Sources & Caching (via SearchSploit + exploit-db links)
 - [x] Local file cache with 7-day TTL for API responses — Validated in Phase 04: Additional Sources & Caching
+- [x] TOML config file for persistent settings (API keys, sources, concurrency, output path) — Validated in Phase 05: Config, Polish, and Incremental Updates
+- [x] Incremental vault merging preserving user notes on re-scan — Validated in Phase 05: Config, Polish, and Incremental Updates
 
 ### Active
 - [ ] Query VulnDB for vulnerability data
@@ -65,4 +67,4 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 | Support both pipe and XML input | Pipe for quick use, XML for richer data — covers both workflow patterns | ✓ Validated |
 
 ---
-*Last updated: 2026-03-24 after Phase 04 (Additional Sources & Caching) completion*
+*Last updated: 2026-03-24 after Phase 05 (Config, Polish, and Incremental Updates) completion — all v1.0 milestone phases complete*
