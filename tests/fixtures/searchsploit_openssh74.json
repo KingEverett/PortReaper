@@ -1,0 +1,46 @@
+{
+  "SEARCH": "openssh 7.4",
+  "DB_PATH_EXPLOIT": "/usr/share/exploitdb",
+  "RESULTS_EXPLOIT": [
+    {
+      "Title": "OpenSSH 7.2p2 - Username Enumeration",
+      "EDB-ID": "40136",
+      "Date_Published": "2016-07-19",
+      "Date_Added": "2016-07-19",
+      "Date_Updated": "2016-07-19",
+      "Author": "Eddie Harari",
+      "Type": "remote",
+      "Platform": "linux",
+      "Port": "",
+      "Verified": "1",
+      "Codes": "CVE-2016-6210;OSVDB-140070",
+      "Tags": "",
+      "Aliases": "",
+      "Screenshot": "",
+      "Application": "",
+      "Source": "",
+      "Path": "/usr/share/exploitdb/exploits/linux/remote/40136.py"
+    },
+    {
+      "Title": "OpenSSH < 7.7 - User Enumeration (2)",
+      "EDB-ID": "45233",
+      "Date_Published": "2018-08-21",
+      "Date_Added": "2018-08-21",
+      "Date_Updated": "2018-08-21",
+      "Author": "Justin Gardner",
+      "Type": "remote",
+      "Platform": "linux",
+      "Port": "",
+      "Verified": "0",
+      "Codes": "CVE-2018-15473",
+      "Tags": "",
+      "Aliases": "",
+      "Screenshot": "",
+      "Application": "",
+      "Source": "",
+      "Path": "/usr/share/exploitdb/exploits/linux/remote/45233.py"
+    }
+  ],
+  "DB_PATH_SHELLCODE": "/usr/share/exploitdb",
+  "RESULTS_SHELLCODE": []
+}
