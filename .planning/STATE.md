@@ -115,6 +115,12 @@ Recent decisions affecting current work:
 
 None yet.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260324-o3i | Add scan overview note (overview.md) inside each scan subfolder | 2026-03-24 | e3d5b6e | [260324-o3i-add-scan-overview-note-overview-md-insid](./quick/260324-o3i-add-scan-overview-note-overview-md-insid/) |
+
 ### Blockers/Concerns
 
 - NVD API rate limits and key registration: verify current values at nvd.nist.gov/developers/vulnerabilities before setting default semaphore bounds (register for free API key early)
@@ -124,6 +130,5 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T22:26:18.234Z
-Stopped at: Completed quick/260324-o3i-PLAN.md
+Last activity: 2026-03-24 - Completed quick task 260324-o3i: Add scan overview note (overview.md) inside each scan subfolder
 Resume file: None
