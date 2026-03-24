@@ -23,12 +23,13 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 - [x] Produce hierarchical node structure: Project → IP Addresses → Ports/Services — Validated in Phase 03: Obsidian Vault Output
 - [x] Highlight nodes by vulnerability severity using Obsidian tags and YAML frontmatter — Validated in Phase 03: Obsidian Vault Output
 - [x] Generate service notes with structured template (frontmatter, service info table, vulnerabilities, links) — Validated in Phase 03: Obsidian Vault Output
+- [x] Query OSV.dev for vulnerability data — Validated in Phase 04: Additional Sources & Caching
+- [x] Query SearchSploit for local exploit references — Validated in Phase 04: Additional Sources & Caching
+- [x] Query ExploitDB for available exploits — Validated in Phase 04: Additional Sources & Caching (via SearchSploit + exploit-db links)
+- [x] Local file cache with 7-day TTL for API responses — Validated in Phase 04: Additional Sources & Caching
 
 ### Active
-- [ ] Query OSV.dev for vulnerability data
 - [ ] Query VulnDB for vulnerability data
-- [ ] Query ExploitDB for available exploits
-- [ ] Query SearchSploit for local exploit references
 - [ ] Query PacketStorm Security for exploit/advisory data
 
 ### Out of Scope
@@ -64,4 +65,4 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 | Support both pipe and XML input | Pipe for quick use, XML for richer data — covers both workflow patterns | ✓ Validated |
 
 ---
-*Last updated: 2026-03-24 after Phase 03 (Obsidian Vault Output) completion*
+*Last updated: 2026-03-24 after Phase 04 (Additional Sources & Caching) completion*
