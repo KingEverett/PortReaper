@@ -1,5 +1,6 @@
 pub mod frontmatter;
 pub mod graph_config;
+pub mod templates;
 pub mod writer;
 
 use std::path::Path;
