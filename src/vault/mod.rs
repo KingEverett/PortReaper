@@ -454,6 +454,55 @@ pub fn generate_vault(
     let scan_index_path = format!("scans/{}/_index.md", scan_label);
     writer::write_note(vault_path, &scan_index_path, &scan_index_body)?;
 
+    // Write overview.md for this scan
+    // Build top_cves: collect all CVEs, sort by score descending (None last), take top 10
+    let mut top_cves_raw: Vec<(String, Option<f32>, String, String)> = cve_map
+        .values()
+        .map(|acc| {
+            let desc = acc.description.as_deref().unwrap_or("").to_string();
+            let truncated = templates::truncate_description(&desc);
+            (
+                acc.cve_id.clone(),
+                acc.score,
+                acc.severity.obsidian_tag().to_string(),
+                truncated,
+            )
+        })
+        .collect();
+    top_cves_raw.sort_by(|a, b| {
+        match (a.1, b.1) {
+            (Some(sa), Some(sb)) => sb.partial_cmp(&sa).unwrap_or(std::cmp::Ordering::Equal),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => std::cmp::Ordering::Equal,
+        }
+    });
+    top_cves_raw.truncate(10);
+
+    // Build service_entries from all scan hosts
+    let service_entries: Vec<(String, u16, String, String, Option<String>)> = scan.hosts
+        .iter()
+        .flat_map(|host| {
+            host.ports.iter().map(move |port| {
+                let svc_name = port.service.as_ref().map(|s| s.name.clone()).unwrap_or_else(|| "unknown".to_string());
+                let product = port.service.as_ref().and_then(|s| s.product.clone());
+                (host.ip.clone(), port.port_id, port.protocol.clone(), svc_name, product)
+            })
+        })
+        .collect();
+
+    let overview_body = templates::render_scan_overview_body(
+        scan_label,
+        host_count,
+        service_count,
+        cve_count,
+        &severity_breakdown,
+        &top_cves_raw,
+        &host_entries,
+        &service_entries,
+    );
+    writer::write_note(vault_path, &format!("scans/{}/overview.md", scan_label), &overview_body)?;
+
     Ok(VaultStats {
         hosts: host_count,
         services: service_count,
@@ -834,6 +883,21 @@ mod tests {
         assert!(path.exists(), "scans/test-label/_index.md should exist");
         let content = fs::read_to_string(&path).expect("read scan _index.md");
         assert!(content.contains("# Scan:"), "scan index should have scan title");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn generate_vault_creates_overview_md_in_scan_subfolder() {
+        let (scan, dir) = make_scan("overview_md");
+        generate_vault(&scan, &dir, "test-label").expect("generate_vault");
+        let path = dir.join("scans/test-label/overview.md");
+        assert!(path.exists(), "scans/test-label/overview.md should exist at {:?}", path);
+        let content = fs::read_to_string(&path).expect("read overview.md");
+        assert!(content.contains("# Scan Overview:"), "should have Scan Overview heading");
+        assert!(content.contains("## Top CVEs"), "should have Top CVEs section");
+        assert!(content.contains("## Hosts"), "should have Hosts section");
+        assert!(content.contains("## Services"), "should have Services section");
+        assert!(content.contains("[[192.168.1.1]]"), "should have host wikilink");
         let _ = fs::remove_dir_all(&dir);
     }
 
