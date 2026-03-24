@@ -215,6 +215,31 @@ pub fn generate_vault(
 
     // ===== PASS 2: Write all files =====
 
+    // Collect pre-existing service file paths for stale detection (D-02)
+    let scan_services_dir = vault_path.join("scans").join(scan_label).join("services");
+    let pre_existing_services: Vec<String> = if scan_services_dir.exists() {
+        std::fs::read_dir(&scan_services_dir)
+            .ok()
+            .map(|entries| {
+                entries.flatten()
+                    .filter_map(|e| {
+                        let name = e.file_name().to_string_lossy().to_string();
+                        if name.ends_with(".md") {
+                            Some(format!("scans/{}/services/{}", scan_label, name))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    } else {
+        vec![]
+    };
+
+    // Track which service paths are regenerated this run (for stale tag detection)
+    let mut regenerated_service_paths: Vec<String> = vec![];
+
     // 1. Write .obsidian/graph.json
     let graph_json = graph_config::generate_graph_json();
     writer::write_note(vault_path, ".obsidian/graph.json", &graph_json)?;
@@ -254,7 +279,7 @@ pub fn generate_vault(
             scan_label,
             sanitize_filename(&host.ip)
         );
-        writer::write_note(vault_path, &path, &note_content)?;
+        merge::merge_write_note(vault_path, &path, &note_content)?;
 
         // 4. Write service notes
         for port in &host.ports {
@@ -306,11 +331,12 @@ pub fn generate_vault(
                 sanitize_filename(&host.ip),
                 format!("{}_{}", port.port_id, sanitize_filename(&port.protocol))
             );
-            writer::write_note(vault_path, &path, &note_content)?;
+            merge::merge_write_note(vault_path, &path, &note_content)?;
+            regenerated_service_paths.push(path);
         }
     }
 
-    // 5. Write CVE notes
+    // 5. Write CVE notes (with Score History tracking)
     let cve_count = cve_map.len();
     for (_, acc) in &cve_map {
         let fm = CveFrontmatter {
@@ -334,7 +360,15 @@ pub fn generate_vault(
         );
         let note_content = frontmatter::render_note(&fm, &body)?;
         let path = format!("cves/{}.md", sanitize_filename(&acc.cve_id));
-        writer::write_note(vault_path, &path, &note_content)?;
+        merge::merge_write_cve_note(
+            vault_path,
+            &path,
+            &note_content,
+            acc.score,
+            acc.severity.obsidian_tag(),
+            acc.cvss_version.as_deref(),
+            &today,
+        )?;
     }
 
     // 6. Write technology notes
@@ -350,7 +384,12 @@ pub fn generate_vault(
         let body = templates::render_tech_body(&acc.product, &acc.instances, &acc.cve_ids);
         let note_content = frontmatter::render_note(&fm, &body)?;
         let path = format!("technologies/{}.md", sanitize_filename(&acc.product));
-        writer::write_note(vault_path, &path, &note_content)?;
+        merge::merge_write_note(vault_path, &path, &note_content)?;
+    }
+
+    // Apply stale tags to service notes not seen in current scan (D-02)
+    if !pre_existing_services.is_empty() {
+        merge::apply_stale_tags(vault_path, &pre_existing_services, &regenerated_service_paths)?;
     }
 
     // 7. Write index pages
@@ -421,6 +460,17 @@ pub fn generate_vault(
         cves: cve_count,
         technologies: tech_count,
     })
+}
+
+// ============================================================
+// Merge target detection (for main.rs use)
+// ============================================================
+
+/// Find existing scan folder with IP overlap for merge. Returns scan label or None.
+/// Called by main.rs before derive_scan_label to detect existing scan subfolders for merge.
+pub fn find_merge_target(vault_path: &Path, scan: &ScanResult) -> Option<String> {
+    let ips: Vec<String> = scan.hosts.iter().map(|h| h.ip.clone()).collect();
+    merge::find_existing_scan_folder(vault_path, &ips)
 }
 
 // ============================================================
