@@ -6,9 +6,12 @@ use tokio::sync::Semaphore;
 use tokio::time::{Duration, sleep};
 
 use crate::models::{Vulnerability, ScanResult};
-use crate::sources::{VulnLookupError, VulnSource};
+use crate::sources::{VulnLookupError, VulnSource, ExploitSource, ExploitLookupError};
 use crate::sources::nvd::NvdSource;
 use crate::sources::cve_org::CveOrgSource;
+use crate::sources::osv::OsvSource;
+use crate::sources::searchsploit::SearchSploitSource;
+use crate::cache;
 
 /// Statistics returned by enrich_scan, summarising what was done.
 #[derive(Debug, Default)]
@@ -19,8 +22,12 @@ pub struct EnrichmentStats {
     pub services_skipped: usize,
     /// Total number of unique CVEs found across all services.
     pub cves_found: usize,
+    /// Total number of exploits found across all services.
+    pub exploits_found: usize,
     /// Human-readable failure messages, e.g. "NVD: rate limited (3 services affected)".
     pub source_failures: Vec<String>,
+    /// Per-source status: (source_name, success). Built at end of enrichment.
+    pub source_status: Vec<(String, bool)>,
 }
 
 /// Options controlling enrichment behaviour.
@@ -29,6 +36,10 @@ pub struct EnrichmentOptions {
     pub concurrency: usize,
     /// When true, suppress progress output to stderr.
     pub quiet: bool,
+    /// When true, bypass cache and re-fetch all data per D-12.
+    pub fresh: bool,
+    /// Lowercase source names that are disabled per D-14.
+    pub disabled_sources: Vec<String>,
 }
 
 impl Default for EnrichmentOptions {
@@ -36,30 +47,44 @@ impl Default for EnrichmentOptions {
         Self {
             concurrency: 5,
             quiet: false,
+            fresh: false,
+            disabled_sources: vec![],
         }
+    }
+}
+
+impl EnrichmentOptions {
+    /// Returns true if the named source is enabled (not in disabled_sources).
+    pub fn source_enabled(&self, name: &str) -> bool {
+        !self.disabled_sources.contains(&name.to_lowercase())
     }
 }
 
 /// Orchestrate vulnerability enrichment for a complete scan result.
 ///
-/// For every service with CPE strings, queries NVD for CVEs by CPE, then
+/// For every service with CPE strings, queries NVD + OSV for CVEs by CPE, then
 /// enriches each found CVE with CVE.org CVSS data. Uses a semaphore to
 /// bound concurrency. Applies exponential backoff on rate-limit errors.
 /// Deduplicates CVEs by ID, keeping the highest CVSS score.
+/// Optionally invokes SearchSploit for exploit lookup.
+/// Cache is checked before network calls; results written after fetch.
 ///
 /// Services with no CPE strings are skipped with a warning on stderr.
 /// If a source fails for a service, partial results from other services
 /// are still collected and returned.
 pub async fn enrich_scan(
     scan: &mut ScanResult,
-    nvd: Arc<NvdSource>,
-    cve_org: Arc<CveOrgSource>,
+    nvd: Option<Arc<NvdSource>>,
+    cve_org: Option<Arc<CveOrgSource>>,
+    osv: Option<Arc<OsvSource>>,
+    searchsploit: Option<Arc<SearchSploitSource>>,
     opts: &EnrichmentOptions,
 ) -> EnrichmentStats {
     let mut stats = EnrichmentStats::default();
 
-    // Collect (host_idx, port_idx, port_id, protocol, service_label, cpe_list) for services with CPEs
-    let mut work_items: Vec<(usize, usize, u16, String, String, Vec<String>)> = Vec::new();
+    // Collect (host_idx, port_idx, port_id, protocol, service_label, cpe_list, product, version)
+    // for services with CPEs (or product for searchsploit)
+    let mut work_items: Vec<(usize, usize, u16, String, String, Vec<String>, Option<String>, Option<String>)> = Vec::new();
 
     for (host_idx, host) in scan.hosts.iter().enumerate() {
         for (port_idx, port) in host.ports.iter().enumerate() {
@@ -99,6 +124,8 @@ pub async fn enrich_scan(
                 port.protocol.clone(),
                 product_version,
                 service.cpe.clone(),
+                service.product.clone(),
+                service.version.clone(),
             ));
         }
     }
@@ -111,16 +138,38 @@ pub async fn enrich_scan(
     }
 
     let semaphore = Arc::new(Semaphore::new(opts.concurrency));
+    let fresh = opts.fresh;
+
+    // Track per-source success/failure across all tasks
+    let nvd_failures = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let nvd_successes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let osv_failures = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let osv_successes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let cve_org_failures = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let cve_org_successes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let ss_failures = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let ss_successes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
 
     // Spawn tasks for each service
     let mut task_handles = Vec::new();
-    for (n, (host_idx, port_idx, _port_id, _protocol, product_version, cpe_list)) in
+    for (n, (host_idx, port_idx, _port_id, _protocol, product_version, cpe_list, product, version)) in
         work_items.into_iter().enumerate()
     {
         let sem = semaphore.clone();
         let nvd_arc = nvd.clone();
         let cve_org_arc = cve_org.clone();
+        let osv_arc = osv.clone();
+        let ss_arc = searchsploit.clone();
         let quiet = opts.quiet;
+
+        let nvd_fail_cnt = nvd_failures.clone();
+        let nvd_ok_cnt = nvd_successes.clone();
+        let osv_fail_cnt = osv_failures.clone();
+        let osv_ok_cnt = osv_successes.clone();
+        let cve_org_fail_cnt = cve_org_failures.clone();
+        let cve_org_ok_cnt = cve_org_successes.clone();
+        let ss_fail_cnt = ss_failures.clone();
+        let ss_ok_cnt = ss_successes.clone();
 
         let handle = tokio::spawn(async move {
             let _permit = sem.acquire().await.expect("semaphore closed");
@@ -129,82 +178,204 @@ pub async fn enrich_scan(
             let mut all_vulns: Vec<Vulnerability> = Vec::new();
             let mut failure: Option<String> = None;
 
-            for cpe in &cpe_list {
-                let nvd_ref = &*nvd_arc;
-                match with_retry(|| nvd_ref.lookup_cpe(cpe)).await {
-                    Ok(vulns) => {
-                        all_vulns.extend(vulns);
-                    }
-                    Err(VulnLookupError::Empty { .. }) => {
-                        // No results for this CPE -- not a failure
-                    }
-                    Err(e) => {
-                        let msg = format!("NVD error for {}: {}", product_version, e);
-                        failure = Some(msg);
-                    }
-                }
-            }
-
-            if !quiet {
-                eprintln!(
-                    "[{}/{}] Querying NVD for {}... {} CVEs",
-                    pos,
-                    total,
-                    product_version,
-                    all_vulns.len()
-                );
-            }
-
-            // Enrich with CVE.org per-CVE data
-            if !all_vulns.is_empty() {
-                if !quiet {
-                    eprintln!(
-                        "[CVE.org] Enriching {} CVEs for {}...",
-                        all_vulns.len(),
-                        product_version
-                    );
-                }
-                let cve_org_ref = &*cve_org_arc;
-                for vuln in &mut all_vulns {
-                    match with_retry(|| cve_org_ref.lookup_cve_id(&vuln.cve_id)).await {
-                        Ok(Some(cve_org_score)) => {
-                            // Update if CVE.org has a higher score
-                            let should_update = match &vuln.cvss {
-                                None => true,
-                                Some(existing) => cve_org_score.score > existing.score,
-                            };
-                            if should_update {
-                                vuln.cvss = Some(cve_org_score);
-                                vuln.source = "CVE.org".to_string();
+            // ── NVD lookup with cache ──────────────────────────────────────────
+            if let Some(ref nvd_ref) = nvd_arc {
+                for cpe in &cpe_list {
+                    // Check cache first
+                    if let Some(cached) = cache::read_cache("nvd", cpe, cache::DEFAULT_TTL_SECS, fresh).await {
+                        if !quiet {
+                            eprintln!(
+                                "[{}/{}] NVD (cached): {}... {} CVEs",
+                                pos, total, product_version, cached.len()
+                            );
+                        }
+                        nvd_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        all_vulns.extend(cached);
+                    } else {
+                        let nvd = &**nvd_ref;
+                        match with_retry(|| nvd.lookup_cpe(cpe)).await {
+                            Ok(vulns) => {
+                                cache::write_cache("nvd", cpe, &vulns).await;
+                                if !quiet {
+                                    eprintln!(
+                                        "[{}/{}] NVD: {}... {} CVEs",
+                                        pos, total, product_version, vulns.len()
+                                    );
+                                }
+                                nvd_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                all_vulns.extend(vulns);
+                            }
+                            Err(VulnLookupError::Empty { .. }) => {
+                                // No results — not a failure
+                                nvd_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            }
+                            Err(e) => {
+                                let msg = format!("NVD error for {}: {}", product_version, e);
+                                if failure.is_none() {
+                                    failure = Some(msg);
+                                }
+                                nvd_fail_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                             }
                         }
-                        Ok(None) | Err(VulnLookupError::Empty { .. }) => {
-                            // CVE.org has no record -- keep NVD data
+                    }
+                }
+            }
+
+            // ── OSV lookup with cache ──────────────────────────────────────────
+            if let Some(ref osv_ref) = osv_arc {
+                for cpe in &cpe_list {
+                    if let Some(cached) = cache::read_cache("osv", cpe, cache::DEFAULT_TTL_SECS, fresh).await {
+                        if !quiet {
+                            eprintln!(
+                                "[{}/{}] OSV (cached): {}... {} CVEs",
+                                pos, total, product_version, cached.len()
+                            );
+                        }
+                        osv_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        all_vulns.extend(cached);
+                    } else {
+                        let osv = &**osv_ref;
+                        match with_retry(|| osv.lookup_cpe(cpe)).await {
+                            Ok(vulns) => {
+                                cache::write_cache("osv", cpe, &vulns).await;
+                                if !quiet {
+                                    eprintln!(
+                                        "[{}/{}] OSV: {}... {} CVEs",
+                                        pos, total, product_version, vulns.len()
+                                    );
+                                }
+                                osv_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                all_vulns.extend(vulns);
+                            }
+                            Err(VulnLookupError::Empty { .. }) => {
+                                // No results — not a failure
+                                osv_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            }
+                            Err(e) => {
+                                let msg = format!("OSV error for {}: {}", product_version, e);
+                                if failure.is_none() {
+                                    failure = Some(msg);
+                                }
+                                osv_fail_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── CVE.org enrichment (per-CVE, no cache — enriches existing CVEs) ─
+            if let Some(ref cve_org_ref) = cve_org_arc {
+                if !all_vulns.is_empty() {
+                    if !quiet {
+                        eprintln!(
+                            "[CVE.org] Enriching {} CVEs for {}...",
+                            all_vulns.len(),
+                            product_version
+                        );
+                    }
+                    let cve_org = &**cve_org_ref;
+                    for vuln in &mut all_vulns {
+                        match with_retry(|| cve_org.lookup_cve_id(&vuln.cve_id)).await {
+                            Ok(Some(cve_org_score)) => {
+                                let should_update = match &vuln.cvss {
+                                    None => true,
+                                    Some(existing) => cve_org_score.score > existing.score,
+                                };
+                                if should_update {
+                                    vuln.cvss = Some(cve_org_score);
+                                    vuln.source = "CVE.org".to_string();
+                                }
+                                cve_org_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            }
+                            Ok(None) | Err(VulnLookupError::Empty { .. }) => {
+                                // CVE.org has no record -- keep NVD/OSV data
+                                cve_org_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            }
+                            Err(e) => {
+                                if failure.is_none() {
+                                    failure = Some(format!("CVE.org error for {}: {}", vuln.cve_id, e));
+                                }
+                                cve_org_fail_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Deduplicate vulns from NVD + OSV ──────────────────────────────
+            let deduped = dedup_vulnerabilities(all_vulns);
+
+            // ── SearchSploit exploit lookup ────────────────────────────────────
+            let mut exploits = Vec::new();
+            if let Some(ref ss_ref) = ss_arc {
+                if let (Some(prod), Some(ver)) = (&product, &version) {
+                    let ss = &**ss_ref;
+                    match ss.search_product(prod, ver).await {
+                        Ok(found) => {
+                            if !quiet {
+                                eprintln!(
+                                    "[{}/{}] SearchSploit: {} {}... {} exploits",
+                                    pos, total, prod, ver, found.len()
+                                );
+                            }
+                            ss_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            exploits = found;
+                        }
+                        Err(ExploitLookupError::Empty { .. }) => {
+                            // No exploits found — not a failure
+                            ss_ok_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                         }
                         Err(e) => {
+                            let msg = format!("SearchSploit error for {} {}: {}", prod, ver, e);
                             if failure.is_none() {
-                                failure = Some(format!("CVE.org error for {}: {}", vuln.cve_id, e));
+                                failure = Some(msg);
                             }
+                            ss_fail_cnt.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                         }
                     }
                 }
             }
 
-            let deduped = dedup_vulnerabilities(all_vulns);
-            (host_idx, port_idx, deduped, failure)
+            (host_idx, port_idx, deduped, exploits, failure)
         });
         task_handles.push(handle);
     }
 
     // Collect results from all tasks
     for handle in task_handles {
-        let (host_idx, port_idx, vulns, failure) = handle.await.expect("task panicked");
-        let count = vulns.len();
+        let (host_idx, port_idx, vulns, exploits, failure) = handle.await.expect("task panicked");
+        let vuln_count = vulns.len();
+        let exploit_count = exploits.len();
         scan.hosts[host_idx].ports[port_idx].vulnerabilities = vulns;
-        stats.cves_found += count;
+        scan.hosts[host_idx].ports[port_idx].exploits = exploits;
+        stats.cves_found += vuln_count;
+        stats.exploits_found += exploit_count;
         if let Some(msg) = failure {
             stats.source_failures.push(msg);
         }
+    }
+
+    // Build source_status per D-16
+    let nvd_ok = nvd_successes.load(std::sync::atomic::Ordering::Relaxed);
+    let nvd_fail = nvd_failures.load(std::sync::atomic::Ordering::Relaxed);
+    let osv_ok = osv_successes.load(std::sync::atomic::Ordering::Relaxed);
+    let osv_fail = osv_failures.load(std::sync::atomic::Ordering::Relaxed);
+    let cve_org_ok = cve_org_successes.load(std::sync::atomic::Ordering::Relaxed);
+    let cve_org_fail = cve_org_failures.load(std::sync::atomic::Ordering::Relaxed);
+    let ss_ok = ss_successes.load(std::sync::atomic::Ordering::Relaxed);
+    let ss_fail = ss_failures.load(std::sync::atomic::Ordering::Relaxed);
+
+    if nvd.is_some() {
+        stats.source_status.push(("NVD".to_string(), nvd_fail == 0 && nvd_ok > 0 || nvd_fail == 0));
+    }
+    if osv.is_some() {
+        stats.source_status.push(("OSV".to_string(), osv_fail == 0 && osv_ok > 0 || osv_fail == 0));
+    }
+    if cve_org.is_some() {
+        stats.source_status.push(("CVE.org".to_string(), cve_org_fail == 0 && cve_org_ok > 0 || cve_org_fail == 0));
+    }
+    if searchsploit.is_some() {
+        stats.source_status.push(("SearchSploit".to_string(), ss_fail == 0 && ss_ok > 0 || ss_fail == 0));
     }
 
     stats
@@ -439,7 +610,9 @@ mod tests {
         assert_eq!(stats.services_queried, 0);
         assert_eq!(stats.services_skipped, 0);
         assert_eq!(stats.cves_found, 0);
+        assert_eq!(stats.exploits_found, 0);
         assert!(stats.source_failures.is_empty());
+        assert!(stats.source_status.is_empty());
     }
 
     #[test]
@@ -447,5 +620,27 @@ mod tests {
         let opts = EnrichmentOptions::default();
         assert_eq!(opts.concurrency, 5);
         assert!(!opts.quiet);
+        assert!(!opts.fresh);
+        assert!(opts.disabled_sources.is_empty());
+    }
+
+    #[test]
+    fn source_enabled_returns_true_for_enabled_source() {
+        let opts = EnrichmentOptions {
+            disabled_sources: vec!["osv".to_string()],
+            ..Default::default()
+        };
+        assert!(opts.source_enabled("nvd"), "nvd should be enabled");
+        assert!(!opts.source_enabled("osv"), "osv should be disabled");
+        assert!(!opts.source_enabled("OSV"), "OSV (uppercase) should be disabled (case-insensitive)");
+    }
+
+    #[test]
+    fn source_enabled_all_enabled_by_default() {
+        let opts = EnrichmentOptions::default();
+        assert!(opts.source_enabled("nvd"));
+        assert!(opts.source_enabled("osv"));
+        assert!(opts.source_enabled("cveorg"));
+        assert!(opts.source_enabled("searchsploit"));
     }
 }
