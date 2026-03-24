@@ -38,23 +38,61 @@ async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
     let mut result = parser::parse_and_merge(inputs)?;
 
     if !cli.no_enrich {
-        // Read NVD API key from PORTREAPER_NVD_KEY env var per D-07
-        let api_key = std::env::var("PORTREAPER_NVD_KEY").ok();
-        let nvd = Arc::new(portreaper::sources::nvd::NvdSource::new(api_key));
-        let cve_org = Arc::new(portreaper::sources::cve_org::CveOrgSource::new());
-
-        let enrich_opts = portreaper::enrichment::EnrichmentOptions {
+        let opts = portreaper::enrichment::EnrichmentOptions {
             concurrency: 5, // D-15: default cap
             quiet: cli.quiet, // D-13: -q suppresses progress
+            fresh: cli.fresh,
+            disabled_sources: cli.disable_sources.iter().map(|s| s.to_lowercase()).collect(),
+        };
+
+        let nvd = if opts.source_enabled("nvd") {
+            let api_key = std::env::var("PORTREAPER_NVD_KEY").ok();
+            Some(Arc::new(portreaper::sources::nvd::NvdSource::new(api_key)))
+        } else {
+            None
+        };
+
+        let cve_org = if opts.source_enabled("cveorg") {
+            Some(Arc::new(portreaper::sources::cve_org::CveOrgSource::new()))
+        } else {
+            None
+        };
+
+        let osv = if opts.source_enabled("osv") {
+            Some(Arc::new(portreaper::sources::osv::OsvSource::new()))
+        } else {
+            None
+        };
+
+        let searchsploit = if opts.source_enabled("searchsploit") {
+            match portreaper::sources::searchsploit::SearchSploitSource::try_new() {
+                Some(s) => Some(Arc::new(s)),
+                None => {
+                    if !cli.quiet {
+                        eprintln!("searchsploit not found — skipping exploit lookup");
+                    }
+                    None
+                }
+            }
+        } else {
+            None
         };
 
         let stats = portreaper::enrichment::enrich_scan(
-            &mut result, nvd, cve_org, &enrich_opts
+            &mut result, nvd, cve_org, osv, searchsploit, &opts
         ).await;
 
         // Print source failure warnings to stderr per D-05
         for failure in &stats.source_failures {
             eprintln!("Warning: {}", failure);
+        }
+
+        // Print source status summary per D-16
+        if !cli.quiet && !stats.source_status.is_empty() {
+            let status_line: Vec<String> = stats.source_status.iter()
+                .map(|(name, ok)| if *ok { format!("{} OK", name) } else { format!("{} FAIL", name) })
+                .collect();
+            eprintln!("Sources: {}", status_line.join(", "));
         }
     }
 

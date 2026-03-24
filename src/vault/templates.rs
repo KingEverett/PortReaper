@@ -144,6 +144,7 @@ pub fn render_service_body(
     ip: &str,
     port: &Port,
     vulns_for_table: &[(String, Option<f32>, String, String)],
+    exploits: &[crate::models::Exploit],
 ) -> String {
     let svc_name = port.service.as_ref().map(|s| s.name.as_str()).unwrap_or("unknown");
     let product = port.service.as_ref().and_then(|s| s.product.as_deref());
@@ -189,6 +190,22 @@ pub fn render_service_body(
             let truncated = truncate_description(desc);
             body.push_str(&format!("| {} | {} | {} | {} |\n",
                 cve_link, score_display, severity, truncated));
+        }
+    }
+
+    // Exploits section (D-01: separate section below CVEs)
+    if !exploits.is_empty() {
+        body.push_str("\n## Exploits\n\n");
+        body.push_str("| Title | EDB-ID | Type | Platform | Verified | CVE Refs |\n");
+        body.push_str("|-------|--------|------|----------|----------|----------|\n");
+        for exploit in exploits {
+            let verified_str = if exploit.verified { "Yes" } else { "No" };
+            let cve_str = exploit.cve_refs.join(", ");
+            body.push_str(&format!(
+                "| {} | [{}](https://www.exploit-db.com/exploits/{}) | {} | {} | {} | {} |\n",
+                exploit.title, exploit.edb_id, exploit.edb_id,
+                exploit.exploit_type, exploit.platform, verified_str, cve_str
+            ));
         }
     }
 
@@ -540,7 +557,7 @@ mod tests {
             vulnerabilities: vec![],
             exploits: vec![],
         };
-        let body = render_service_body("192.168.1.1", &port, &[]);
+        let body = render_service_body("192.168.1.1", &port, &[], &[]);
         assert!(body.contains("[[OpenSSH]]"), "should have product tech wikilink");
         assert!(body.contains("**Host:** [[192.168.1.1]]"), "should have host backlink");
         assert!(body.contains("cpe:/a:openbsd:openssh:8.9p1"), "should have CPE block");
@@ -570,7 +587,7 @@ mod tests {
             ("CVE-2021-41773".to_string(), Some(9.8f32), "critical".to_string(), "Path traversal".to_string()),
             ("CVE-2021-42013".to_string(), Some(9.8f32), "critical".to_string(), "RCE".to_string()),
         ];
-        let body = render_service_body("10.0.0.1", &port, &vulns);
+        let body = render_service_body("10.0.0.1", &port, &vulns, &[]);
         assert!(body.contains("[[CVE-2021-41773]]"), "should have first CVE link");
         assert!(body.contains("[[CVE-2021-42013]]"), "should have second CVE link");
     }
@@ -585,7 +602,7 @@ mod tests {
             vulnerabilities: vec![],
             exploits: vec![],
         };
-        let body = render_service_body("10.0.0.1", &port, &[]);
+        let body = render_service_body("10.0.0.1", &port, &[], &[]);
         assert!(body.contains("No vulnerabilities found."), "should show no vulnerabilities message");
     }
 

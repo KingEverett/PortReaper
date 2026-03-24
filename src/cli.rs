@@ -25,4 +25,12 @@ pub struct Cli {
     /// Generate Obsidian vault at specified directory
     #[arg(long)]
     pub vault: Option<PathBuf>,
+
+    /// Bypass cache: re-fetch all data even if cached results are fresh
+    #[arg(long)]
+    pub fresh: bool,
+
+    /// Disable a named source (repeatable): nvd, cveorg, osv, searchsploit
+    #[arg(long = "disable-source", value_name = "SOURCE", action = clap::ArgAction::Append)]
+    pub disable_sources: Vec<String>,
 }

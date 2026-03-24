@@ -297,7 +297,7 @@ pub fn generate_vault(
                 })
                 .collect();
 
-            let body = templates::render_service_body(&host.ip, port, &vulns_for_table);
+            let body = templates::render_service_body(&host.ip, port, &vulns_for_table, &port.exploits);
             let note_content = frontmatter::render_note(&fm, &body)?;
             let path = format!(
                 "scans/{}/services/{}_{}.md",
