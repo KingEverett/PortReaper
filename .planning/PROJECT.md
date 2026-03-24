@@ -19,17 +19,17 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 - [x] Query CVE.org for vulnerability data — Validated in Phase 02: Enrichment Core
 - [x] Auto-research each discovered service/version against vulnerability databases — Validated in Phase 02: Enrichment Core
 - [x] CVSS score display and severity classification (critical/high/medium/low) — Validated in Phase 02: Enrichment Core
+- [x] Generate Obsidian vault with `[[wikilinks]]` for native graph view — Validated in Phase 03: Obsidian Vault Output
+- [x] Produce hierarchical node structure: Project → IP Addresses → Ports/Services — Validated in Phase 03: Obsidian Vault Output
+- [x] Highlight nodes by vulnerability severity using Obsidian tags and YAML frontmatter — Validated in Phase 03: Obsidian Vault Output
+- [x] Generate service notes with structured template (frontmatter, service info table, vulnerabilities, links) — Validated in Phase 03: Obsidian Vault Output
 
 ### Active
-- [ ] Generate Obsidian vault with `[[wikilinks]]` for native graph view
-- [ ] Produce hierarchical node structure: Project → IP Addresses → Ports/Services
 - [ ] Query OSV.dev for vulnerability data
 - [ ] Query VulnDB for vulnerability data
 - [ ] Query ExploitDB for available exploits
 - [ ] Query SearchSploit for local exploit references
 - [ ] Query PacketStorm Security for exploit/advisory data
-- [ ] Highlight nodes by vulnerability severity using Obsidian tags and YAML frontmatter
-- [ ] Generate service notes with structured template (frontmatter, service info table, vulnerabilities, links)
 
 ### Out of Scope
 
@@ -58,10 +58,10 @@ Eliminate the manual, scattered process of researching nmap findings across mult
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Rust for implementation | Single binary, fast concurrent HTTP requests, strong CLI ecosystem | ✓ Validated |
-| Obsidian vault as output | User's existing workflow tool, graph view maps naturally to enumeration hierarchy | — Pending |
-| Tags + frontmatter for severity | Enables Obsidian graph filtering and CSS snippet color-coding without folder-based organization | — Pending |
+| Obsidian vault as output | User's existing workflow tool, graph view maps naturally to enumeration hierarchy | ✓ Validated |
+| Tags + frontmatter for severity | Enables Obsidian graph filtering and CSS snippet color-coding without folder-based organization | ✓ Validated |
 | Pluggable data source architecture | User wants to easily swap/add vulnerability databases as the tool evolves | ✓ Validated |
 | Support both pipe and XML input | Pipe for quick use, XML for richer data — covers both workflow patterns | ✓ Validated |
 
 ---
-*Last updated: 2026-03-21 after Phase 02 (Enrichment Core) completion*
+*Last updated: 2026-03-24 after Phase 03 (Obsidian Vault Output) completion*
