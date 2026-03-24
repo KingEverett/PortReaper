@@ -1,5 +1,6 @@
 pub mod frontmatter;
 pub mod graph_config;
+pub mod merge;
 pub mod templates;
 pub mod writer;
 
