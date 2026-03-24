@@ -84,6 +84,18 @@ impl Severity {
             Self::None => "None",
         }
     }
+
+    /// Lowercase tag string for Obsidian frontmatter tags.
+    /// Distinct from label() which returns short display labels ("Crit", "High", etc.).
+    pub fn obsidian_tag(&self) -> &'static str {
+        match self {
+            Self::Critical => "critical",
+            Self::High => "high",
+            Self::Medium => "medium",
+            Self::Low => "low",
+            Self::None => "none",
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -104,6 +116,31 @@ pub struct Vulnerability {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn severity_obsidian_tag_critical() {
+        assert_eq!(Severity::Critical.obsidian_tag(), "critical");
+    }
+
+    #[test]
+    fn severity_obsidian_tag_high() {
+        assert_eq!(Severity::High.obsidian_tag(), "high");
+    }
+
+    #[test]
+    fn severity_obsidian_tag_medium() {
+        assert_eq!(Severity::Medium.obsidian_tag(), "medium");
+    }
+
+    #[test]
+    fn severity_obsidian_tag_low() {
+        assert_eq!(Severity::Low.obsidian_tag(), "low");
+    }
+
+    #[test]
+    fn severity_obsidian_tag_none() {
+        assert_eq!(Severity::None.obsidian_tag(), "none");
+    }
 
     #[test]
     fn severity_from_score_critical() {
