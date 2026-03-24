@@ -64,11 +64,11 @@ Plans:
   3. The graph view colors nodes correctly by severity (critical/high/medium/low) using the bundled CSS snippet and severity tags
   4. The `_index.md` file lists all discovered hosts and services with their highest severity, giving an at-a-glance attack surface summary without opening individual notes
   5. Filenames containing IP addresses, IPv6 brackets, and service names with slashes are all valid on the filesystem and resolve correctly as wikilinks in Obsidian
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
-- [ ] 03-01-PLAN.md — Vault module skeleton: serde_yml dep, frontmatter structs, graph config, Severity::obsidian_tag()
-- [ ] 03-02-PLAN.md — Two-pass vault generation: note body templates, wikilinks, host/service/CVE/technology notes
+- [x] 03-01-PLAN.md — Vault module skeleton: serde_yml dep, frontmatter structs, graph config, Severity::obsidian_tag()
+- [x] 03-02-PLAN.md — Two-pass vault generation: note body templates, wikilinks, host/service/CVE/technology notes
 - [ ] 03-03-PLAN.md — Index pages, --vault CLI wiring, end-to-end integration tests
 
 ### Phase 4: Additional Sources and Caching
@@ -99,6 +99,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-21 |
 | 2. Enrichment Core | 3/3 | Complete   | 2026-03-21 |
-| 3. Obsidian Vault Output | 0/3 | Not started | - |
+| 3. Obsidian Vault Output | 2/3 | In Progress|  |
 | 4. Additional Sources and Caching | 0/TBD | Not started | - |
 | 5. Config, Polish, and Incremental Updates | 0/TBD | Not started | - |
