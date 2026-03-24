@@ -1,3 +1,16 @@
+/// Exploit record from ExploitDB/SearchSploit.
+#[derive(Debug, Clone)]
+pub struct Exploit {
+    pub title: String,
+    pub edb_id: String,
+    pub exploit_type: String, // "remote", "local", "dos", etc.
+    pub platform: String,
+    pub path: String,           // local filesystem path to exploit file
+    pub cve_refs: Vec<String>,  // CVE IDs parsed from Codes field
+    pub verified: bool,
+    pub date_published: String,
+}
+
 /// Normalized scan result -- parser-agnostic representation.
 /// All parsers (XML, text, greppable) produce this same structure.
 
@@ -30,6 +43,7 @@ pub struct Port {
     pub state: String,    // "open", "filtered", "closed"
     pub service: Option<Service>,
     pub vulnerabilities: Vec<Vulnerability>,
+    pub exploits: Vec<Exploit>,
 }
 
 #[derive(Debug, Clone)]
@@ -263,5 +277,36 @@ mod tests {
         assert_eq!(service.product.as_deref(), Some("OpenSSH"));
         assert_eq!(service.version.as_deref(), Some("8.9p1"));
         assert_eq!(service.cpe.len(), 1);
+    }
+
+    #[test]
+    fn exploit_struct_can_be_constructed_with_all_fields() {
+        let exploit = Exploit {
+            title: "OpenSSH 7.7 - Username Enumeration".to_string(),
+            edb_id: "45939".to_string(),
+            exploit_type: "remote".to_string(),
+            platform: "linux".to_string(),
+            path: "/usr/share/exploitdb/exploits/linux/remote/45939.py".to_string(),
+            cve_refs: vec!["CVE-2018-15473".to_string()],
+            verified: false,
+            date_published: "2018-09-26".to_string(),
+        };
+        assert_eq!(exploit.edb_id, "45939");
+        assert_eq!(exploit.exploit_type, "remote");
+        assert!(!exploit.verified);
+        assert_eq!(exploit.cve_refs.len(), 1);
+    }
+
+    #[test]
+    fn port_exploits_field_defaults_to_empty_vec() {
+        let port = Port {
+            port_id: 22,
+            protocol: "tcp".to_string(),
+            state: "open".to_string(),
+            service: None,
+            vulnerabilities: vec![],
+            exploits: vec![],
+        };
+        assert!(port.exploits.is_empty(), "Port.exploits should default to empty");
     }
 }

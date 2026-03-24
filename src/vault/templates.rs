@@ -418,6 +418,7 @@ mod tests {
                 cpe: vec![],
             }),
             vulnerabilities: vulns,
+            exploits: vec![],
         }
     }
 
@@ -495,6 +496,7 @@ mod tests {
                 state: "open".to_string(),
                 service: None,
                 vulnerabilities: vec![vuln],
+                exploits: vec![],
             }],
         };
         let body = render_host_body(&host, "label");
@@ -536,6 +538,7 @@ mod tests {
                 cpe: vec!["cpe:/a:openbsd:openssh:8.9p1".to_string()],
             }),
             vulnerabilities: vec![],
+            exploits: vec![],
         };
         let body = render_service_body("192.168.1.1", &port, &[]);
         assert!(body.contains("[[OpenSSH]]"), "should have product tech wikilink");
@@ -561,6 +564,7 @@ mod tests {
                 cpe: vec![],
             }),
             vulnerabilities: vec![],
+            exploits: vec![],
         };
         let vulns = vec![
             ("CVE-2021-41773".to_string(), Some(9.8f32), "critical".to_string(), "Path traversal".to_string()),
@@ -579,6 +583,7 @@ mod tests {
             state: "open".to_string(),
             service: None,
             vulnerabilities: vec![],
+            exploits: vec![],
         };
         let body = render_service_body("10.0.0.1", &port, &[]);
         assert!(body.contains("No vulnerabilities found."), "should show no vulnerabilities message");

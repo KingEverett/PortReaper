@@ -212,6 +212,7 @@ mod tests {
                     state: "open".to_string(),
                     service: None,
                     vulnerabilities: vec![],
+                    exploits: vec![],
                 })
                 .collect(),
             os_matches: vec![],

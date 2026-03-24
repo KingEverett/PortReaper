@@ -202,5 +202,6 @@ fn convert_port(xml_port: XmlPort) -> models::Port {
         state,
         service,
         vulnerabilities: vec![],
+        exploits: vec![],
     }
 }

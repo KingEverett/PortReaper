@@ -48,6 +48,7 @@ fn make_test_scan() -> ScanResult {
         state: "open".to_string(),
         service: Some(service_ssh),
         vulnerabilities: vec![cve_shared.clone()],
+        exploits: vec![],
     };
 
     let service_http = Service {
@@ -69,6 +70,7 @@ fn make_test_scan() -> ScanResult {
         service: Some(service_http),
         // Port 80 has both CVEs: the Apache-specific one + the shared one
         vulnerabilities: vec![cve_apache, cve_shared],
+        exploits: vec![],
     };
 
     let host = Host {

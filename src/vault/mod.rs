@@ -473,6 +473,7 @@ mod tests {
             state: "open".to_string(),
             service: Some(service_ssh),
             vulnerabilities: vec![],
+            exploits: vec![],
         };
 
         let service_http = Service {
@@ -493,6 +494,7 @@ mod tests {
             state: "open".to_string(),
             service: Some(service_http),
             vulnerabilities: vec![vuln1],
+            exploits: vec![],
         };
 
         let host = Host {
@@ -615,6 +617,7 @@ mod tests {
                 cpe: vec![],
             }),
             vulnerabilities: vec![shared_vuln.clone()],
+            exploits: vec![],
         };
 
         let port2 = Port {
@@ -633,6 +636,7 @@ mod tests {
                 cpe: vec![],
             }),
             vulnerabilities: vec![shared_vuln.clone()],
+            exploits: vec![],
         };
 
         let host = Host {
@@ -688,6 +692,7 @@ mod tests {
                 cpe: vec![],
             }),
             vulnerabilities: vec![],
+            exploits: vec![],
         };
 
         let host = Host {
@@ -734,6 +739,7 @@ mod tests {
                 cpe: vec![],
             }),
             vulnerabilities: vec![],
+            exploits: vec![],
         };
 
         let host = Host {

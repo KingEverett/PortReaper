@@ -1,7 +1,8 @@
 use thiserror::Error;
 
-pub mod nvd;
 pub mod cve_org;
+pub mod nvd;
+pub mod osv;
 
 #[derive(Debug, Error)]
 pub enum VulnLookupError {
@@ -29,6 +30,36 @@ pub trait VulnSource: Send + Sync {
         &self,
         cpe: &str,
     ) -> impl std::future::Future<Output = Result<Vec<crate::models::Vulnerability>, VulnLookupError>>
+           + Send;
+}
+
+/// Error type for exploit lookup operations.
+#[derive(Debug, Error)]
+pub enum ExploitLookupError {
+    #[error("binary not found: {binary}")]
+    BinaryNotFound { binary: String },
+
+    #[error("empty results for {query}")]
+    Empty { query: String },
+
+    #[error("subprocess failed: {msg}")]
+    SubprocessFailed { msg: String },
+
+    #[error("json parse error: {msg}")]
+    ParseError { msg: String },
+}
+
+/// Pluggable exploit data source (e.g., SearchSploit).
+/// Distinct from VulnSource because exploits are not CVEs.
+pub trait ExploitSource: Send + Sync {
+    /// Human-readable name for this source (e.g., "SearchSploit")
+    fn name(&self) -> &str;
+    /// Search for exploits by product name and version string.
+    fn search_product(
+        &self,
+        product: &str,
+        version: &str,
+    ) -> impl std::future::Future<Output = Result<Vec<crate::models::Exploit>, ExploitLookupError>>
            + Send;
 }
 
@@ -139,5 +170,38 @@ mod tests {
         let empty_msg = format!("{}", empty);
         let rate_msg = format!("{}", rate_limited);
         assert_ne!(empty_msg, rate_msg);
+    }
+
+    #[test]
+    fn exploit_lookup_error_variants_are_distinct() {
+        let binary_not_found = ExploitLookupError::BinaryNotFound {
+            binary: "searchsploit".to_string(),
+        };
+        let empty = ExploitLookupError::Empty {
+            query: "openssh 7.4".to_string(),
+        };
+        let subprocess_failed = ExploitLookupError::SubprocessFailed {
+            msg: "non-zero exit code".to_string(),
+        };
+        let parse_error = ExploitLookupError::ParseError {
+            msg: "unexpected token".to_string(),
+        };
+
+        let msgs: Vec<String> = vec![
+            format!("{}", binary_not_found),
+            format!("{}", empty),
+            format!("{}", subprocess_failed),
+            format!("{}", parse_error),
+        ];
+
+        // All four should be distinct
+        for i in 0..msgs.len() {
+            for j in (i + 1)..msgs.len() {
+                assert_ne!(msgs[i], msgs[j], "variants {} and {} should differ", i, j);
+            }
+        }
+
+        // BinaryNotFound should mention the binary name
+        assert!(msgs[0].contains("searchsploit"), "BinaryNotFound should mention binary name");
     }
 }

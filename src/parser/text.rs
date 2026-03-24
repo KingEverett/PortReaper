@@ -67,6 +67,7 @@ pub fn parse_text(content: &str, source: &str) -> Result<models::ScanResult> {
                 state,
                 service,
                 vulnerabilities: vec![],
+                exploits: vec![],
             });
         }
         // Non-matching lines are silently skipped (lenient parsing per locked decision)
