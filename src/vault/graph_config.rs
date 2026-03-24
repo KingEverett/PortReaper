@@ -1,5 +1,3 @@
-// Graph config generation — implemented in Task 2
-
 /// Pre-computed RGB integers for D-18 colors: R*65536 + G*256 + B
 const COLOR_CRITICAL: u32 = 16736324; // #ff4444
 const COLOR_HIGH: u32 = 16746496; // #ff8800
@@ -48,4 +46,48 @@ pub fn generate_css_snippet() -> String {
 }
 "#
     .to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_graph_json_contains_seven_color_groups() {
+        let json = generate_graph_json();
+        let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid JSON");
+        let groups = parsed["colorGroups"].as_array().expect("colorGroups array");
+        assert_eq!(groups.len(), 7, "should have exactly 7 color groups");
+    }
+
+    #[test]
+    fn generate_graph_json_contains_critical_tag_query() {
+        let json = generate_graph_json();
+        assert!(json.contains("tag:#critical"), "should contain tag:#critical query");
+    }
+
+    #[test]
+    fn generate_graph_json_critical_rgb_value_is_correct() {
+        let json = generate_graph_json();
+        let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid JSON");
+        let groups = parsed["colorGroups"].as_array().expect("colorGroups array");
+        let critical = groups
+            .iter()
+            .find(|g| g["query"].as_str() == Some("tag:#critical"))
+            .expect("critical group not found");
+        let rgb = critical["color"]["rgb"].as_u64().expect("rgb value");
+        assert_eq!(rgb, 16736324, "critical RGB should be 16736324 (#ff4444)");
+    }
+
+    #[test]
+    fn generate_css_snippet_contains_graph_node_tag_variable() {
+        let css = generate_css_snippet();
+        assert!(css.contains("--graph-node-tag"), "should contain --graph-node-tag CSS variable");
+    }
+
+    #[test]
+    fn generate_css_snippet_contains_obsidian_snippets_instructions() {
+        let css = generate_css_snippet();
+        assert!(css.contains(".obsidian/snippets/"), "should contain installation path instructions");
+    }
 }
