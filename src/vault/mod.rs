@@ -352,6 +352,68 @@ pub fn generate_vault(
         writer::write_note(vault_path, &path, &note_content)?;
     }
 
+    // 7. Write index pages
+
+    // Compute severity breakdown from CVE map
+    let mut severity_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for (_, acc) in &cve_map {
+        let tag = acc.severity.obsidian_tag().to_string();
+        *severity_counts.entry(tag).or_insert(0) += 1;
+    }
+    // Sort by severity descending: critical, high, medium, low, none
+    let severity_order = ["critical", "high", "medium", "low", "none"];
+    let severity_breakdown: Vec<(String, usize)> = severity_order
+        .iter()
+        .filter_map(|&s| severity_counts.get(s).map(|&c| (s.to_string(), c)))
+        .collect();
+
+    // Compute critical findings: CVEs with critical severity
+    let mut critical_findings: Vec<(String, Vec<String>)> = cve_map
+        .values()
+        .filter(|acc| acc.severity == Severity::Critical)
+        .map(|acc| (acc.cve_id.clone(), acc.affected_services.clone()))
+        .collect();
+    critical_findings.sort_by(|a, b| a.0.cmp(&b.0));
+
+    // Compute host entries: (ip, highest_severity)
+    let host_entries: Vec<(String, String)> = scan.hosts
+        .iter()
+        .map(|host| {
+            let all_vulns: Vec<Vulnerability> = host
+                .ports
+                .iter()
+                .flat_map(|p| p.vulnerabilities.iter().cloned())
+                .collect();
+            let severity = highest_severity(&all_vulns);
+            (host.ip.clone(), severity.obsidian_tag().to_string())
+        })
+        .collect();
+
+    // Write global _index.md at vault root
+    let global_index_body = templates::render_global_index_body(
+        scan_label,
+        host_count,
+        service_count,
+        cve_count,
+        &severity_breakdown,
+        &critical_findings,
+        &host_entries,
+    );
+    writer::write_note(vault_path, "_index.md", &global_index_body)?;
+
+    // Write per-scan _index.md
+    let scan_index_body = templates::render_scan_index_body(
+        scan_label,
+        &scan.source,
+        host_count,
+        service_count,
+        cve_count,
+        &severity_breakdown,
+        &host_entries,
+    );
+    let scan_index_path = format!("scans/{}/_index.md", scan_label);
+    writer::write_note(vault_path, &scan_index_path, &scan_index_body)?;
+
     Ok(VaultStats {
         hosts: host_count,
         services: service_count,
@@ -691,6 +753,30 @@ mod tests {
         let dir = make_test_dir("no_product");
         let stats = generate_vault(&scan, &dir, "no-product-label").expect("generate_vault");
         assert_eq!(stats.technologies, 0, "no tech note should be created when product is None");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ---- Index page tests (Plan 03) ----
+
+    #[test]
+    fn generate_vault_creates_global_index_at_root() {
+        let (scan, dir) = make_scan("global_index");
+        generate_vault(&scan, &dir, "test-label").expect("generate_vault");
+        let path = dir.join("_index.md");
+        assert!(path.exists(), "_index.md should exist at vault root");
+        let content = fs::read_to_string(&path).expect("read _index.md");
+        assert!(content.contains("# PortReaper Vault"), "global index should have title");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn generate_vault_creates_scan_index_in_scan_subfolder() {
+        let (scan, dir) = make_scan("scan_index");
+        generate_vault(&scan, &dir, "test-label").expect("generate_vault");
+        let path = dir.join("scans/test-label/_index.md");
+        assert!(path.exists(), "scans/test-label/_index.md should exist");
+        let content = fs::read_to_string(&path).expect("read scan _index.md");
+        assert!(content.contains("# Scan:"), "scan index should have scan title");
         let _ = fs::remove_dir_all(&dir);
     }
 

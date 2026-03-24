@@ -287,6 +287,112 @@ pub fn render_tech_body(
 }
 
 // ============================================================
+// Global index body rendering (D-16)
+// severity_breakdown: [("critical", 3), ("high", 5), ...]
+// critical_findings: [(cve_id, [service_wikilinks])]
+// host_entries: [(ip, highest_severity)]
+// ============================================================
+
+pub fn render_global_index_body(
+    scan_label: &str,
+    host_count: usize,
+    service_count: usize,
+    cve_count: usize,
+    severity_breakdown: &[(String, usize)],
+    critical_findings: &[(String, Vec<String>)],
+    host_entries: &[(String, String)],
+) -> String {
+    let mut body = String::from("# PortReaper Vault\n\n");
+
+    // Summary table
+    body.push_str("## Summary\n\n");
+    body.push_str("| Metric | Count |\n");
+    body.push_str("|--------|-------|\n");
+    body.push_str(&format!("| Hosts | {} |\n", host_count));
+    body.push_str(&format!("| Services | {} |\n", service_count));
+    body.push_str(&format!("| CVEs | {} |\n", cve_count));
+    body.push('\n');
+
+    // Severity Breakdown table
+    body.push_str("## Severity Breakdown\n\n");
+    body.push_str("| Severity | Count |\n");
+    body.push_str("|----------|-------|\n");
+    for (severity, count) in severity_breakdown {
+        body.push_str(&format!("| {} | {} |\n", severity, count));
+    }
+    body.push('\n');
+
+    // Critical Findings
+    body.push_str("## Critical Findings\n\n");
+    if critical_findings.is_empty() {
+        body.push_str("No critical findings.\n");
+    } else {
+        for (cve_id, svc_links) in critical_findings {
+            let svc_list = svc_links.join(", ");
+            body.push_str(&format!("- {}: affected by {}\n", cve_wikilink(cve_id), svc_list));
+        }
+    }
+    body.push('\n');
+
+    // Scans section
+    body.push_str("## Scans\n\n");
+    body.push_str(&format!(
+        "- [[scans/{}/_index|{}]]\n",
+        scan_label, scan_label
+    ));
+    body.push('\n');
+
+    // Hosts section
+    body.push_str("## Hosts\n\n");
+    for (ip, severity) in host_entries {
+        body.push_str(&format!("- {} (highest: {})\n", host_wikilink(ip), severity));
+    }
+
+    body
+}
+
+// ============================================================
+// Per-scan index body rendering (D-17)
+// severity_breakdown: [("critical", 3), ...]
+// host_entries: [(ip, highest_severity)]
+// ============================================================
+
+pub fn render_scan_index_body(
+    scan_label: &str,
+    source_file: &str,
+    host_count: usize,
+    service_count: usize,
+    cve_count: usize,
+    severity_breakdown: &[(String, usize)],
+    host_entries: &[(String, String)],
+) -> String {
+    let mut body = format!("# Scan: {}\n\n", scan_label);
+
+    body.push_str(&format!("**Source:** {}\n\n", source_file));
+    body.push_str(&format!(
+        "**Hosts:** {} | **Services:** {} | **CVEs:** {}\n\n",
+        host_count, service_count, cve_count
+    ));
+
+    // Severity Breakdown table
+    body.push_str("## Severity Breakdown\n\n");
+    body.push_str("| Severity | Count |\n");
+    body.push_str("|----------|-------|\n");
+    for (severity, count) in severity_breakdown {
+        body.push_str(&format!("| {} | {} |\n", severity, count));
+    }
+    body.push('\n');
+
+    // Hosts section
+    body.push_str("## Hosts\n\n");
+    for (ip, severity) in host_entries {
+        body.push_str(&format!("- {} (highest: {})\n", host_wikilink(ip), severity));
+    }
+
+    body
+}
+
+// ============================================================
 // Tests
 // ============================================================
 
@@ -537,5 +643,137 @@ mod tests {
         let result = truncate_description(long);
         assert!(result.len() <= 120 + 3, "result should be at most 123 chars (120 + '...')");
         assert!(result.ends_with("..."), "result should end with ...");
+    }
+
+    // render_global_index_body tests
+
+    #[test]
+    fn render_global_index_body_produces_portreaper_vault_title() {
+        let body = render_global_index_body(
+            "test-scan",
+            2, 5, 3,
+            &[("critical".to_string(), 1), ("high".to_string(), 2)],
+            &[],
+            &[("192.168.1.1".to_string(), "critical".to_string())],
+        );
+        assert!(body.contains("# PortReaper Vault"), "should have title");
+    }
+
+    #[test]
+    fn render_global_index_body_contains_count_table() {
+        let body = render_global_index_body(
+            "test-scan",
+            2, 5, 3,
+            &[],
+            &[],
+            &[],
+        );
+        assert!(body.contains("| Metric | Count |"), "should have metric table header");
+        assert!(body.contains("| Hosts |"), "should have hosts row");
+        assert!(body.contains("| Services |"), "should have services row");
+        assert!(body.contains("| CVEs |"), "should have CVEs row");
+        assert!(body.contains("| 2 |"), "should have hosts count");
+        assert!(body.contains("| 5 |"), "should have services count");
+        assert!(body.contains("| 3 |"), "should have CVEs count");
+    }
+
+    #[test]
+    fn render_global_index_body_contains_severity_breakdown_table() {
+        let body = render_global_index_body(
+            "test-scan",
+            2, 5, 3,
+            &[("critical".to_string(), 3), ("high".to_string(), 5)],
+            &[],
+            &[],
+        );
+        assert!(body.contains("| Severity | Count |"), "should have severity table header");
+        assert!(body.contains("| critical |"), "should have critical row");
+        assert!(body.contains("| high |"), "should have high row");
+        assert!(body.contains("| 3 |"), "should have critical count");
+    }
+
+    #[test]
+    fn render_global_index_body_includes_critical_findings_with_cve_wikilinks() {
+        let body = render_global_index_body(
+            "test-scan",
+            1, 2, 1,
+            &[("critical".to_string(), 1)],
+            &[("CVE-2023-38408".to_string(), vec!["[[192.168.1.1_22_tcp|:22 ssh]]".to_string()])],
+            &[("192.168.1.1".to_string(), "critical".to_string())],
+        );
+        assert!(body.contains("## Critical Findings"), "should have Critical Findings section");
+        assert!(body.contains("[[CVE-2023-38408]]"), "should have CVE wikilink in critical findings");
+    }
+
+    #[test]
+    fn render_global_index_body_includes_hosts_list() {
+        let body = render_global_index_body(
+            "test-scan",
+            1, 1, 0,
+            &[],
+            &[],
+            &[("192.168.1.1".to_string(), "high".to_string())],
+        );
+        assert!(body.contains("## Hosts"), "should have Hosts section");
+        assert!(body.contains("[[192.168.1.1]]"), "should have host wikilink");
+        assert!(body.contains("high"), "should show severity");
+    }
+
+    // render_scan_index_body tests
+
+    #[test]
+    fn render_scan_index_body_produces_scan_title() {
+        let body = render_scan_index_body(
+            "2026-03-21_192.168.1.1",
+            "scan.xml",
+            1, 2, 1,
+            &[("critical".to_string(), 1)],
+            &[("192.168.1.1".to_string(), "critical".to_string())],
+        );
+        assert!(body.contains("# Scan: 2026-03-21_192.168.1.1"), "should have scan title");
+    }
+
+    #[test]
+    fn render_scan_index_body_includes_source_file() {
+        let body = render_scan_index_body(
+            "test-label",
+            "scan_vulnerable.xml",
+            1, 2, 1,
+            &[],
+            &[],
+        );
+        assert!(body.contains("**Source:**"), "should have Source field");
+        assert!(body.contains("scan_vulnerable.xml"), "should have source filename");
+    }
+
+    #[test]
+    fn render_scan_index_body_includes_counts_and_severity_table() {
+        let body = render_scan_index_body(
+            "test-label",
+            "scan.xml",
+            1, 2, 3,
+            &[("high".to_string(), 2), ("medium".to_string(), 1)],
+            &[],
+        );
+        assert!(body.contains("**Hosts:** 1"), "should have hosts count");
+        assert!(body.contains("**Services:** 2"), "should have services count");
+        assert!(body.contains("**CVEs:** 3"), "should have CVEs count");
+        assert!(body.contains("| Severity | Count |"), "should have severity table");
+        assert!(body.contains("| high |"), "should have high row");
+        assert!(body.contains("| medium |"), "should have medium row");
+    }
+
+    #[test]
+    fn render_scan_index_body_includes_hosts_list() {
+        let body = render_scan_index_body(
+            "test-label",
+            "scan.xml",
+            1, 1, 0,
+            &[],
+            &[("10.0.0.1".to_string(), "low".to_string())],
+        );
+        assert!(body.contains("## Hosts"), "should have Hosts section");
+        assert!(body.contains("[[10.0.0.1]]"), "should have host wikilink");
+        assert!(body.contains("low"), "should show severity");
     }
 }
