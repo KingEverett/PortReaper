@@ -410,6 +410,77 @@ pub fn render_scan_index_body(
 }
 
 // ============================================================
+// Scan overview body rendering
+// top_cves: (cve_id, score, severity, truncated_description)
+// host_entries: (ip, highest_severity)
+// service_entries: (ip, port, proto, svc_name, product)
+// ============================================================
+
+pub fn render_scan_overview_body(
+    scan_label: &str,
+    host_count: usize,
+    service_count: usize,
+    cve_count: usize,
+    severity_breakdown: &[(String, usize)],
+    top_cves: &[(String, Option<f32>, String, String)],
+    host_entries: &[(String, String)],
+    service_entries: &[(String, u16, String, String, Option<String>)],
+) -> String {
+    let mut body = format!("# Scan Overview: {}\n\n", scan_label);
+
+    // Summary table
+    body.push_str("## Summary\n\n");
+    body.push_str("| Metric | Count |\n");
+    body.push_str("|--------|-------|\n");
+    body.push_str(&format!("| Hosts | {} |\n", host_count));
+    body.push_str(&format!("| Open Ports | {} |\n", service_count));
+    body.push_str(&format!("| CVEs | {} |\n", cve_count));
+    body.push('\n');
+
+    // Severity Breakdown table
+    body.push_str("## Severity Breakdown\n\n");
+    body.push_str("| Severity | Count |\n");
+    body.push_str("|----------|-------|\n");
+    for (severity, count) in severity_breakdown {
+        body.push_str(&format!("| {} | {} |\n", severity, count));
+    }
+    body.push('\n');
+
+    // Top CVEs table
+    body.push_str("## Top CVEs\n\n");
+    if top_cves.is_empty() {
+        body.push_str("No CVEs found.\n");
+    } else {
+        body.push_str("| CVE | Score | Severity | Description |\n");
+        body.push_str("|-----|-------|----------|-------------|\n");
+        for (cve_id, score, severity, desc) in top_cves {
+            let cve_link = cve_wikilink(cve_id);
+            let score_display = score.map(|s| format!("{:.1}", s)).unwrap_or_else(|| "N/A".to_string());
+            let truncated = truncate_description(desc);
+            body.push_str(&format!("| {} | {} | {} | {} |\n",
+                cve_link, score_display, severity, truncated));
+        }
+    }
+    body.push('\n');
+
+    // Hosts section
+    body.push_str("## Hosts\n\n");
+    for (ip, severity) in host_entries {
+        body.push_str(&format!("- {} (highest: {})\n", host_wikilink(ip), severity));
+    }
+    body.push('\n');
+
+    // Services section
+    body.push_str("## Services\n\n");
+    for (ip, port, proto, svc_name, product) in service_entries {
+        let link = service_wikilink(ip, *port, proto, svc_name, product.as_deref());
+        body.push_str(&format!("- {}\n", link));
+    }
+
+    body
+}
+
+// ============================================================
 // Tests
 // ============================================================
 
@@ -797,5 +868,105 @@ mod tests {
         assert!(body.contains("## Hosts"), "should have Hosts section");
         assert!(body.contains("[[10.0.0.1]]"), "should have host wikilink");
         assert!(body.contains("low"), "should show severity");
+    }
+
+    // render_scan_overview_body tests
+
+    fn make_overview_inputs() -> (
+        Vec<(String, usize)>,
+        Vec<(String, Option<f32>, String, String)>,
+        Vec<(String, String)>,
+        Vec<(String, u16, String, String, Option<String>)>,
+    ) {
+        let severity_breakdown = vec![
+            ("critical".to_string(), 1usize),
+            ("high".to_string(), 2usize),
+        ];
+        let top_cves = vec![
+            ("CVE-2021-41773".to_string(), Some(9.8f32), "critical".to_string(), "Path traversal in Apache".to_string()),
+            ("CVE-2021-42013".to_string(), Some(7.5f32), "high".to_string(), "RCE in Apache".to_string()),
+        ];
+        let host_entries = vec![
+            ("192.168.1.1".to_string(), "critical".to_string()),
+        ];
+        let service_entries = vec![
+            ("192.168.1.1".to_string(), 22u16, "tcp".to_string(), "ssh".to_string(), Some("OpenSSH".to_string())),
+            ("192.168.1.1".to_string(), 80u16, "tcp".to_string(), "http".to_string(), None),
+        ];
+        (severity_breakdown, top_cves, host_entries, service_entries)
+    }
+
+    #[test]
+    fn render_scan_overview_body_contains_heading_with_scan_label() {
+        let (sev, cves, hosts, svcs) = make_overview_inputs();
+        let body = render_scan_overview_body("test-scan-2026", 1, 2, 3, &sev, &cves, &hosts, &svcs);
+        assert!(body.contains("# Scan Overview: test-scan-2026"), "should have heading with scan label");
+    }
+
+    #[test]
+    fn render_scan_overview_body_contains_summary_table() {
+        let (sev, cves, hosts, svcs) = make_overview_inputs();
+        let body = render_scan_overview_body("label", 3, 7, 5, &sev, &cves, &hosts, &svcs);
+        assert!(body.contains("| Hosts | 3 |"), "should have hosts row");
+        assert!(body.contains("| Open Ports | 7 |"), "should have open ports row");
+        assert!(body.contains("| CVEs | 5 |"), "should have CVEs row");
+    }
+
+    #[test]
+    fn render_scan_overview_body_contains_severity_breakdown_table() {
+        let (sev, cves, hosts, svcs) = make_overview_inputs();
+        let body = render_scan_overview_body("label", 1, 2, 3, &sev, &cves, &hosts, &svcs);
+        assert!(body.contains("## Severity Breakdown"), "should have Severity Breakdown section");
+        assert!(body.contains("| Severity | Count |"), "should have table header");
+        assert!(body.contains("| critical | 1 |"), "should have critical row");
+        assert!(body.contains("| high | 2 |"), "should have high row");
+    }
+
+    #[test]
+    fn render_scan_overview_body_contains_top_cves_with_wikilinks() {
+        let (sev, cves, hosts, svcs) = make_overview_inputs();
+        let body = render_scan_overview_body("label", 1, 2, 3, &sev, &cves, &hosts, &svcs);
+        assert!(body.contains("## Top CVEs"), "should have Top CVEs section");
+        assert!(body.contains("[[CVE-2021-41773]]"), "should have first CVE wikilink");
+        assert!(body.contains("[[CVE-2021-42013]]"), "should have second CVE wikilink");
+        assert!(body.contains("9.8"), "should show first CVE score");
+        assert!(body.contains("7.5"), "should show second CVE score");
+        assert!(body.contains("critical"), "should show first CVE severity");
+    }
+
+    #[test]
+    fn render_scan_overview_body_contains_hosts_section_with_wikilinks() {
+        let (sev, cves, hosts, svcs) = make_overview_inputs();
+        let body = render_scan_overview_body("label", 1, 2, 3, &sev, &cves, &hosts, &svcs);
+        assert!(body.contains("## Hosts"), "should have Hosts section");
+        assert!(body.contains("[[192.168.1.1]]"), "should have host wikilink");
+        assert!(body.contains("highest: critical"), "should show highest severity");
+    }
+
+    #[test]
+    fn render_scan_overview_body_contains_services_section_with_wikilinks() {
+        let (sev, cves, hosts, svcs) = make_overview_inputs();
+        let body = render_scan_overview_body("label", 1, 2, 3, &sev, &cves, &hosts, &svcs);
+        assert!(body.contains("## Services"), "should have Services section");
+        assert!(body.contains("192.168.1.1_22_tcp"), "should have ssh service wikilink");
+        assert!(body.contains("192.168.1.1_80_tcp"), "should have http service wikilink");
+    }
+
+    #[test]
+    fn render_scan_overview_body_empty_cves_shows_no_cves_found() {
+        let (sev, _cves, hosts, svcs) = make_overview_inputs();
+        let body = render_scan_overview_body("label", 1, 2, 0, &sev, &[], &hosts, &svcs);
+        assert!(body.contains("No CVEs found."), "should show No CVEs found message when empty");
+    }
+
+    #[test]
+    fn render_scan_overview_body_renders_all_received_top_cves() {
+        // Caller is responsible for sorting/truncating; function renders what it receives
+        let cves: Vec<(String, Option<f32>, String, String)> = (1..=10)
+            .map(|i| (format!("CVE-2021-{:05}", i), Some(i as f32), "high".to_string(), format!("Description {}", i)))
+            .collect();
+        let body = render_scan_overview_body("label", 1, 1, 10, &[], &cves, &[], &[]);
+        assert!(body.contains("CVE-2021-00001"), "should render first CVE");
+        assert!(body.contains("CVE-2021-00010"), "should render tenth CVE");
     }
 }
