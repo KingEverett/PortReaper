@@ -1,4 +1,5 @@
 pub mod cache;
+pub mod config;
 pub mod enrichment;
 pub mod models;
 pub mod parser;
