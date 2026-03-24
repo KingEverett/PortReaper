@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::models::{CvssScore, Severity, Vulnerability};
 
 /// 7-day TTL in seconds.
-pub const DEFAULT_TTL_SECS: i64 = 7 * 24 * 60 * 60; // 604800
+pub const DEFAULT_TTL_SECS: i64 = 604800;
 
 /// Serializable form of a Vulnerability for cache storage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
