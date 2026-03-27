@@ -33,13 +33,13 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **OUT-05**: Structured service note template (service info table, vulns, links)
 - [x] **OUT-06**: Shared CVE notes (one note per CVE, linked from all affected services)
 - [x] **OUT-07**: Obsidian CSS snippet for severity-based color-coding in graph view
-- [ ] **OUT-08**: Incremental vault updates (merge new scan data into existing vault)
+- [x] **OUT-08**: Incremental vault updates (merge new scan data into existing vault)
 
 ### Architecture
 
 - [x] **ARCH-01**: Pluggable data source trait for easy swapping/adding of databases
 - [x] **ARCH-02**: Typed error handling (distinguish rate limit vs empty result vs network error)
-- [ ] **ARCH-03**: Config file for default sources, API keys, output paths
+- [x] **ARCH-03**: Config file for default sources, API keys, output paths
 - [x] **ARCH-04**: Progress indicators during vulnerability lookups
 
 ## v2 Requirements
@@ -94,8 +94,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VULN-03 | Phase 4 | Complete |
 | VULN-04 | Phase 4 | Complete |
 | VULN-07 | Phase 4 | Complete |
-| OUT-08 | Phase 5 | Pending |
-| ARCH-03 | Phase 5 | Pending |
+| OUT-08 | Phase 5 | Complete |
+| ARCH-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 23 total
