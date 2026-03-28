@@ -120,6 +120,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260324-o3i | Add scan overview note (overview.md) inside each scan subfolder | 2026-03-24 | e3d5b6e | [260324-o3i-add-scan-overview-note-overview-md-insid](./quick/260324-o3i-add-scan-overview-note-overview-md-insid/) |
+| 260328-gih | Bidirectional CVE wikilinks to increase host node size in Obsidian graph | 2026-03-28 | b0cc6b6 | [260328-gih-make-ip-address-nodes-larger-in-obsidian](./quick/260328-gih-make-ip-address-nodes-larger-in-obsidian/) |
 
 ### Blockers/Concerns
 
@@ -130,5 +131,5 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-03-24 - Completed quick task 260324-o3i: Add scan overview note (overview.md) inside each scan subfolder
+Last activity: 2026-03-28 - Completed quick task 260328-gih: Bidirectional CVE wikilinks to increase host node size in Obsidian graph
 Resume file: None
