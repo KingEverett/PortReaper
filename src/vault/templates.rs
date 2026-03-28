@@ -727,6 +727,81 @@ mod tests {
         assert!(body.contains("192.168.1.1_80_tcp"), "should have affected service wikilink");
         assert!(body.contains("nvd.nist.gov"), "should have NVD reference link");
         assert!(body.contains("cve.org"), "should have CVE.org reference link");
+        assert!(body.contains("## Affected Hosts"), "should have Affected Hosts section");
+        assert!(body.contains("[[192.168.1.1]]"), "should have host wikilink in affected hosts");
+    }
+
+    #[test]
+    fn render_cve_body_affected_hosts_renders_host_wikilinks() {
+        let body = render_cve_body(
+            "CVE-2023-99999",
+            Some(7.5),
+            "high",
+            Some("3.1"),
+            &["NVD".to_string()],
+            Some("Test vuln"),
+            &["[[10.0.0.1_80_tcp|:80 http]]".to_string()],
+            &["[[10.0.0.1]]".to_string(), "[[10.0.0.2]]".to_string()],
+        );
+        assert!(body.contains("## Affected Hosts"), "should have Affected Hosts section");
+        assert!(body.contains("[[10.0.0.1]]"), "should have first host wikilink");
+        assert!(body.contains("[[10.0.0.2]]"), "should have second host wikilink");
+    }
+
+    #[test]
+    fn render_host_body_includes_cve_wikilinks_section() {
+        let vuln1 = Vulnerability {
+            cve_id: "CVE-2021-41773".to_string(),
+            source: "NVD".to_string(),
+            cvss: Some(CvssScore {
+                score: 9.8,
+                severity: Severity::Critical,
+                version: "3.1".to_string(),
+            }),
+            description: None,
+        };
+        let vuln2 = Vulnerability {
+            cve_id: "CVE-2023-38408".to_string(),
+            source: "NVD".to_string(),
+            cvss: Some(CvssScore {
+                score: 7.5,
+                severity: Severity::High,
+                version: "3.1".to_string(),
+            }),
+            description: None,
+        };
+        let host = Host {
+            ip: "10.0.0.1".to_string(),
+            hostnames: vec![],
+            status: "up".to_string(),
+            addresses: vec![],
+            os_matches: vec![],
+            ports: vec![
+                make_port(80, "tcp", "http", None, vec![vuln1]),
+                make_port(22, "tcp", "ssh", Some("OpenSSH"), vec![vuln2]),
+            ],
+        };
+        let body = render_host_body(&host, "label");
+        assert!(body.contains("## CVEs"), "should have CVEs section");
+        assert!(body.contains("[[CVE-2021-41773]]"), "should have first CVE wikilink");
+        assert!(body.contains("[[CVE-2023-38408]]"), "should have second CVE wikilink");
+    }
+
+    #[test]
+    fn render_host_body_no_vulns_omits_cves_section() {
+        let host = Host {
+            ip: "10.0.0.1".to_string(),
+            hostnames: vec![],
+            status: "up".to_string(),
+            addresses: vec![],
+            os_matches: vec![],
+            ports: vec![
+                make_port(80, "tcp", "http", None, vec![]),
+                make_port(22, "tcp", "ssh", None, vec![]),
+            ],
+        };
+        let body = render_host_body(&host, "label");
+        assert!(!body.contains("## CVEs"), "should NOT have CVEs section when no vulns");
     }
 
     // render_tech_body tests
