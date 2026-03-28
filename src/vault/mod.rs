@@ -53,6 +53,7 @@ struct CveAccumulator {
     sources: Vec<String>,
     description: Option<String>,
     affected_services: Vec<String>, // pre-built service wikilinks
+    affected_hosts: Vec<String>,    // pre-built host wikilinks
 }
 
 /// Accumulates data for a technology note across all services.
@@ -145,6 +146,7 @@ pub fn generate_vault(
                         sources: vec![],
                         description: vuln.description.clone(),
                         affected_services: vec![],
+                        affected_hosts: vec![],
                     });
 
                 // Keep highest CVSS score
@@ -172,6 +174,12 @@ pub fn generate_vault(
                 // Add service wikilink (deduplicated)
                 if !acc.affected_services.contains(&svc_wikilink) {
                     acc.affected_services.push(svc_wikilink.clone());
+                }
+
+                // Add host wikilink (deduplicated)
+                let host_wl = templates::host_wikilink(&host.ip);
+                if !acc.affected_hosts.contains(&host_wl) {
+                    acc.affected_hosts.push(host_wl);
                 }
             }
 
@@ -357,6 +365,7 @@ pub fn generate_vault(
             &acc.sources,
             acc.description.as_deref(),
             &acc.affected_services,
+            &acc.affected_hosts,
         );
         let note_content = frontmatter::render_note(&fm, &body)?;
         let path = format!("cves/{}.md", sanitize_filename(&acc.cve_id));

@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use crate::models::{Host, Port};
 use crate::util::filename::sanitize_filename;
 
@@ -103,6 +105,20 @@ pub fn render_host_body(host: &Host, _scan_label: &str) -> String {
         "- Critical: {}\n- High: {}\n- Medium: {}\n- Low: {}\n",
         critical, high, medium, low
     ));
+
+    // CVE wikilinks section (increases host node size in Obsidian graph)
+    let mut cve_ids: BTreeSet<String> = BTreeSet::new();
+    for port in &host.ports {
+        for vuln in &port.vulnerabilities {
+            cve_ids.insert(vuln.cve_id.clone());
+        }
+    }
+    if !cve_ids.is_empty() {
+        body.push_str("\n## CVEs\n\n");
+        for cve_id in &cve_ids {
+            body.push_str(&format!("- {}\n", cve_wikilink(cve_id)));
+        }
+    }
 
     body.push_str("\n## Notes\n\n");
     body
@@ -226,6 +242,7 @@ pub fn render_cve_body(
     sources: &[String],
     description: Option<&str>,
     affected_services: &[String],
+    affected_hosts: &[String],
 ) -> String {
     let mut body = format!("# {}\n\n", cve_id);
 
@@ -257,6 +274,14 @@ pub fn render_cve_body(
     body.push_str("## Affected Services\n\n");
     for svc in affected_services {
         body.push_str(&format!("- {}\n", svc));
+    }
+
+    // Affected Hosts
+    if !affected_hosts.is_empty() {
+        body.push_str("\n## Affected Hosts\n\n");
+        for host in affected_hosts {
+            body.push_str(&format!("- {}\n", host));
+        }
     }
 
     // References
@@ -693,6 +718,7 @@ mod tests {
             &sources,
             Some("Path traversal vulnerability"),
             &affected,
+            &["[[192.168.1.1]]".to_string()],
         );
         assert!(body.contains("**CVSS Score:** 9.8"), "should have score");
         assert!(body.contains("critical"), "should have severity");
