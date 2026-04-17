@@ -256,6 +256,10 @@ pub fn generate_vault(
     let css = graph_config::generate_css_snippet();
     writer::write_note(vault_path, "assets/severity-colors.css", &css)?;
 
+    // 2b. Write vault-root README.md (onboarding — tell user to open this folder)
+    let readme = templates::render_readme(&vault_path.display().to_string());
+    writer::write_note(vault_path, "README.md", &readme)?;
+
     // 3. Write host notes
     let mut host_count = 0usize;
     let mut service_count = 0usize;
@@ -683,6 +687,18 @@ mod tests {
         generate_vault(&scan, &dir, "label").expect("generate_vault");
         let path = dir.join("assets/severity-colors.css");
         assert!(path.exists(), "assets/severity-colors.css should exist");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn generate_vault_creates_readme_with_vault_path() {
+        let (scan, dir) = make_scan("readme");
+        generate_vault(&scan, &dir, "label").expect("generate_vault");
+        let path = dir.join("README.md");
+        assert!(path.exists(), "README.md should exist at vault root");
+        let content = fs::read_to_string(&path).expect("read README.md");
+        assert!(content.contains("Open this folder in Obsidian"), "README should instruct opening the folder");
+        assert!(content.contains(&dir.display().to_string()), "README should embed the vault path");
         let _ = fs::remove_dir_all(&dir);
     }
 

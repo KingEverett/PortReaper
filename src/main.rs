@@ -130,6 +130,7 @@ async fn run(cli: &cli::Cli) -> anyhow::Result<()> {
             stats.hosts, stats.services, stats.cves, stats.technologies
         );
         eprintln!("Output: {}", vault_path.display());
+        eprintln!("Open in Obsidian as vault root: {}", vault_path.display());
         eprintln!("Completed in {:.1}s", start.elapsed().as_secs_f64()); // D-12
         return Ok(());
     }

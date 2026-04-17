@@ -29,6 +29,46 @@ pub fn tech_wikilink(product: &str) -> String {
 }
 
 // ============================================================
+// Vault-root README (onboarding)
+// ============================================================
+
+pub fn render_readme(vault_path_display: &str) -> String {
+    format!(
+        "# PortReaper Vault\n\
+         \n\
+         ## Open this folder in Obsidian\n\
+         \n\
+         Open Obsidian and choose **\"Open folder as vault\"**, then select:\n\
+         \n\
+         ```\n\
+         {vault_path_display}\n\
+         ```\n\
+         \n\
+         Opening any subfolder (like `scans/`) as the vault will break wikilinks — \
+         `[[CVE-...]]` and `[[...]]` references resolve against the vault root, so \
+         hosts, services, CVEs, and technologies must all be visible from the top level.\n\
+         \n\
+         ## Layout\n\
+         \n\
+         - `_index.md` — global entry point\n\
+         - `scans/<label>/` — per-scan notes (hosts, services, overview)\n\
+         - `cves/` — one note per unique CVE, aggregated across scans\n\
+         - `technologies/` — one note per detected product\n\
+         - `.obsidian/graph.json` — graph view color groups (severity-based)\n\
+         - `assets/severity-colors.css` — optional CSS snippet\n\
+         \n\
+         ## If you already opened a subfolder\n\
+         \n\
+         1. Close the vault in Obsidian.\n\
+         2. Delete any `.obsidian/` directory that isn't at this root (it was created \
+         by the wrong folder being opened).\n\
+         3. Remove any empty stray `.md` files in subfolders — Obsidian creates these \
+         when clicking unresolved links.\n\
+         4. Reopen this folder as the vault.\n"
+    )
+}
+
+// ============================================================
 // Description truncation
 // ============================================================
 
